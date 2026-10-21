@@ -1,0 +1,9 @@
+bun.lock
+.turbo
+.next
+.open-next
+.wrangler
+dist
+coverage
+storybook-static
+next-env.d.ts

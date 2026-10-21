@@ -1,0 +1,26 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // Top level = local development (`next dev` via initOpenNextCloudflareForDev). Production lives in env.production.
+  "name": "overtime-web",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "workers_dev": false,
+  "observability": { "enabled": true },
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS",
+  },
+  // Resolves to the locally running `wrangler dev` api
+  "services": [{ "binding": "API", "service": "overtime-api" }],
+  "env": {
+    // Deployed by the release workflow: opennextjs-cloudflare deploy --env production
+    "production": {
+      // Explicit, otherwise wrangler names the Worker "overtime-web-production"
+      "name": "overtime-web",
+      "routes": [{ "pattern": "overtime.caneel.dev", "custom_domain": true }],
+      // services are not inherited from the top level
+      "services": [{ "binding": "API", "service": "overtime-api" }],
+    },
+  },
+}
