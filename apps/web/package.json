@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --port 3000",
-    "build": "opennextjs-cloudflare build",
+    "build": "opennextjs-cloudflare build --env production",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "deploy": "opennextjs-cloudflare deploy",
+    "deploy": "opennextjs-cloudflare deploy --env production",
     "typecheck": "next typegen && tsc --noEmit",
     "lint": "eslint ."
   },

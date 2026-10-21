@@ -26,7 +26,6 @@ Requires Bun 1.4+ and Node 22+.
 
 ```sh
 bun install
-cp apps/api/.dev.vars.example apps/api/.dev.vars
 bun run dev          # web on :3000, api on :8787
 ```
 
@@ -37,6 +36,8 @@ Storybook (local only): `bun run --filter @overtime/ui storybook`, then open htt
 ## Deploying
 
 CI runs on every pull request to `main`. Publishing a GitHub Release deploys that tag to production: api first, then web, followed by a smoke check that both hosts report the new version.
+
+Each `wrangler.jsonc` has local development settings at the top level and production settings (custom domains, vars, service binding) in `env.production`, which is what the release deploys.
 
 ## Roadmap
 

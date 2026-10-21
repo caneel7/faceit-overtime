@@ -1,3 +1,0 @@
-ENVIRONMENT=development
-APP_URL=http://localhost:3000
-VERSION=dev

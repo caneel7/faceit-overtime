@@ -42,16 +42,16 @@ jobs:
       - name: Gate
         run: bunx turbo run typecheck lint test
 
-      # api first: web's service binding points at it
+      # api first: web's service binding points at it. Both use the env.production block of wrangler.jsonc.
       - name: Deploy api
         working-directory: apps/api
-        run: bunx wrangler deploy --var "VERSION:$VERSION"
+        run: bunx wrangler deploy --env production --var "VERSION:$VERSION"
 
       - name: Build and deploy web
         working-directory: apps/web
         run: |
-          bunx opennextjs-cloudflare build
-          bunx opennextjs-cloudflare deploy
+          bunx opennextjs-cloudflare build --env production
+          bunx opennextjs-cloudflare deploy --env production
 
       - name: Smoke check
         run: |
