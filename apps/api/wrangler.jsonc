@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "overtime-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "routes": [{ "pattern": "overtime-api.caneel.dev", "custom_domain": true }],
+  "observability": { "enabled": true },
+  // Production values. Local overrides go in .dev.vars (see .dev.vars.example).
+  // VERSION is replaced at deploy time with the release tag.
+  "vars": {
+    "ENVIRONMENT": "production",
+    "APP_URL": "https://overtime.caneel.dev",
+    "VERSION": "dev",
+  },
+}
