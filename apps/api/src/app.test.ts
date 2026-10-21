@@ -11,7 +11,7 @@ const env: Bindings = {
 
 describe('OpenAPI', () => {
   it('serves an OpenAPI 3.1 document with the health route and error responses', async () => {
-    const res = await app.request('/api/openapi.json', {}, env);
+    const res = await app.request('/openapi.json', {}, env);
     expect(res.status).toBe(200);
     const spec = (await res.json()) as { paths: Record<string, unknown> };
     const jsonWith = (property: string) => ({
@@ -33,9 +33,21 @@ describe('OpenAPI', () => {
   });
 
   it('serves the API reference page', async () => {
-    const res = await app.request('/api/docs', {}, env);
+    const res = await app.request('/docs', {}, env);
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type')).toContain('text/html');
+    expect(await res.text()).toContain('/openapi.json');
+  });
+
+  it('redirects the host root to the docs', async () => {
+    const res = await app.request('/', {}, env);
+    expect(res.status).toBe(302);
+    expect(res.headers.get('location')).toBe('/docs');
+  });
+
+  it.each(['/api/docs', '/api/openapi.json'])('no longer serves %s', async (path) => {
+    const res = await app.request(path, {}, env);
+    expect(res.status).toBe(404);
   });
 });
 

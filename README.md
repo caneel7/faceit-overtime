@@ -3,7 +3,7 @@
 Overtime is a platform I'm building for community esports organizers to run CS2 tournaments end to end: verified FACEIT rosters, automatic Swiss pairings, result tracking and live standings.
 
 - App: https://overtime.caneel.dev
-- API docs: https://overtime-api.caneel.dev/api/docs
+- API docs: https://overtime-api.caneel.dev/docs
 
 > Unofficial — uses the FACEIT Data API. Not affiliated with or endorsed by FACEIT or ESL FACEIT Group.
 
