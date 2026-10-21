@@ -1,9 +1,8 @@
 name: CI
 
+# Pull requests only. Nothing re-runs after merge; releases have their own gate job.
 on:
   pull_request:
-    branches: [main]
-  push:
     branches: [main]
 
 concurrency:
