@@ -3,7 +3,7 @@ name: Release
 # The only path to production: publishing a GitHub Release (tag vX.Y.Z) deploys that tag.
 # Split into jobs so "Re-run failed jobs" only repeats what failed:
 #   gate ─────────┬─▶ deploy-api ─┐
-#   build-web ────┴───────────────┴─▶ deploy-web ─▶ smoke
+#   build-web ────┴───────────────┴─▶ deploy-web ─▶ purge-cache ─▶ smoke
 on:
   release:
     types: [published]
@@ -95,9 +95,34 @@ jobs:
         working-directory: apps/web
         run: bunx opennextjs-cloudflare deploy --env production
 
+  # Drop anything Cloudflare cached from the previous release so nobody is served stale responses
+  purge-cache:
+    name: Purge Cloudflare cache
+    needs: deploy-web
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment:
+      name: production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+    steps:
+      - name: Purge overtime.caneel.dev and overtime-api.caneel.dev
+        run: |
+          response=$(curl -sS -X POST \
+            "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/purge_cache" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{"hosts":["overtime.caneel.dev","overtime-api.caneel.dev"]}')
+          echo "$response" | jq '{success, errors}'
+          if [ "$(echo "$response" | jq -r .success)" != "true" ]; then
+            echo "::error::Cache purge failed"
+            exit 1
+          fi
+
   smoke:
     name: Smoke check
-    needs: deploy-web
+    needs: purge-cache
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
