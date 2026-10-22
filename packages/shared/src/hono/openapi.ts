@@ -18,6 +18,11 @@ const STATUS_BY_CODE: Record<ErrorCode, number> = {
   CONFLICT: 409,
   INTERNAL: 500,
   SERVICE_UNAVAILABLE: 503,
+  INVALID_CREDENTIALS: 401,
+  EMAIL_NOT_VERIFIED: 403,
+  INVALID_TOKEN: 400,
+  RATE_LIMITED: 429,
+  EMAIL_TAKEN: 409,
 };
 
 export function errorResponses(...codes: ErrorCode[]) {
