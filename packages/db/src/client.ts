@@ -32,12 +32,17 @@ export interface DbClient {
   forUser(userId: string): Scope<UserTable | GlobalTable, 'userId'>;
   // the callback's client runs every query inside the transaction (same connection)
   transaction<R>(fn: (tx: DbClient) => Promise<R>): Promise<R>;
-  // `select 1`; rejects on failure or after the connect timeout
+  // `select 1`; rejects on failure or after pingTimeoutMs (health checks must answer fast)
   ping(): Promise<void>;
   close(): Promise<void>;
 }
 
-export type DbClientOptions = { connectTimeoutMs?: number; max?: number };
+export type DbClientOptions = {
+  // long enough for a Neon compute to wake from scale-to-zero
+  connectTimeoutMs?: number;
+  pingTimeoutMs?: number;
+  max?: number;
+};
 
 // The Drizzle instance behind each client, for @overtime/db/unscoped only
 export const executors = new WeakMap<DbClient, Executor>();
@@ -61,7 +66,11 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   });
 }
 
-export function makeClient(db: Executor, timeoutMs: number, close: () => Promise<void>): DbClient {
+export function makeClient(
+  db: Executor,
+  pingTimeoutMs: number,
+  close: () => Promise<void>,
+): DbClient {
   const client: DbClient = {
     global: scope(db, { tables: GLOBAL_TABLES }),
     forUser(userId) {
@@ -74,14 +83,14 @@ export function makeClient(db: Executor, timeoutMs: number, close: () => Promise
     transaction(fn) {
       return db.transaction((tx) =>
         fn(
-          makeClient(tx as unknown as Executor, timeoutMs, async () => {
+          makeClient(tx as unknown as Executor, pingTimeoutMs, async () => {
             throw new QueryBuilderError("close() can't be called inside a transaction");
           }),
         ),
       );
     },
     async ping() {
-      await withTimeout(db.execute(sql`select 1`), timeoutMs);
+      await withTimeout(db.execute(sql`select 1`), pingTimeoutMs);
     },
     close,
   };
@@ -91,11 +100,11 @@ export function makeClient(db: Executor, timeoutMs: number, close: () => Promise
 
 // One client per request. postgres.js connects on the first query, so routes that never query never connect.
 export function createDbClient(connectionString: string, opts: DbClientOptions = {}): DbClient {
-  const timeoutMs = opts.connectTimeoutMs ?? 2000;
+  const { connectTimeoutMs = 10_000, pingTimeoutMs = 2000, max = 5 } = opts;
   const sqlClient = postgres(connectionString, {
-    max: opts.max ?? 5,
-    connect_timeout: Math.ceil(timeoutMs / 1000),
+    max,
+    connect_timeout: Math.ceil(connectTimeoutMs / 1000),
   });
   const db = drizzle({ client: sqlClient }) as unknown as Executor;
-  return makeClient(db, timeoutMs, () => sqlClient.end({ timeout: 5 }));
+  return makeClient(db, pingTimeoutMs, () => sqlClient.end({ timeout: 5 }));
 }
