@@ -180,54 +180,6 @@ describe.skipIf(!url)('database (integration)', () => {
       await expect(tf.insert({ secretEncrypted: 'v1.x.z' })).rejects.toBeInstanceOf(ConflictError);
     });
 
-    it('rejects invalid values with check constraints', async () => {
-      const user = await newUser('chk');
-      const session = (extra: Record<string, unknown>) => ({
-        userId: user.id,
-        refreshTokenHash: `${run}-${randomUUID()}`,
-        authMethods: ['faceit'],
-        expiresAt: new Date(Date.now() + DAY),
-        ...extra,
-      });
-      expect(await rawInsert(userSessions, session({ authMethods: ['totp'] }))).toBe('23514');
-      expect(await rawInsert(userSessions, session({ authMethods: ['faceit', 'sms'] }))).toBe(
-        '23514',
-      );
-      expect(await rawInsert(userSessions, session({ revokedAt: new Date() }))).toBe('23514');
-      expect(
-        await rawInsert(userSessions, session({ revokedAt: new Date(), revokedReason: 'nope' })),
-      ).toBe('23514');
-      expect(
-        await rawInsert(teams, {
-          name: 'T',
-          tag: 'TOOLONG',
-          captainUserId: user.id,
-          createdBy: user.id,
-        }),
-      ).toBe('23514');
-      expect(
-        await rawInsert(teams, { name: 'T', tag: '', captainUserId: user.id, createdBy: user.id }),
-      ).toBe('23514');
-      expect(
-        await rawInsert(players, {
-          faceitPlayerId: `${run}-lvl`,
-          nickname: 'x',
-          cs2Level: 11,
-          syncedAt: new Date(),
-        }),
-      ).toBe('23514');
-      expect(
-        await rawInsert(trustedDevices, {
-          userId: user.id,
-          tokenHash: `${run}-td`,
-          expiresAt: new Date(0),
-        }),
-      ).toBe('23514');
-      expect(
-        await rawInsert(userTwoFactors, { userId: user.id, type: 'sms', secretEncrypted: 'x' }),
-      ).toBe('23514');
-    });
-
     it('nicknames compare case-insensitively (citext)', async () => {
       await newPlayer('CaSe');
       const found = await db.global

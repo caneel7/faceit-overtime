@@ -1,24 +1,26 @@
-import { sql } from 'drizzle-orm';
-import { check, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { baseColumns, live } from './columns';
+import { isNull } from 'drizzle-orm';
+import { pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { id, timestamps } from './columns';
+import { identityProvider } from './enums';
 import { users } from './users';
-
-export const IDENTITY_PROVIDERS = ['faceit'] as const;
-export type IdentityProviderName = (typeof IDENTITY_PROVIDERS)[number];
 
 export const userIdentities = pgTable(
   'user_identities',
   {
-    ...baseColumns(),
+    id: id(),
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id),
-    provider: text('provider', { enum: IDENTITY_PROVIDERS }).notNull(),
+    provider: identityProvider('provider').notNull(),
     providerUserId: text('provider_user_id').notNull(),
+    ...timestamps(),
   },
   (t) => [
-    uniqueIndex('user_identities_provider_key').on(t.provider, t.providerUserId).where(live),
-    uniqueIndex('user_identities_user_provider_key').on(t.userId, t.provider).where(live),
-    check('user_identities_provider_check', sql`${t.provider} in ('faceit')`),
+    uniqueIndex('user_identities_provider_key')
+      .on(t.provider, t.providerUserId)
+      .where(isNull(t.deletedAt)),
+    uniqueIndex('user_identities_user_provider_key')
+      .on(t.userId, t.provider)
+      .where(isNull(t.deletedAt)),
   ],
 );

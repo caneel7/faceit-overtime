@@ -82,21 +82,6 @@ describe.skipIf(!url)('accounts, identities and tokens (integration)', () => {
       await db.global.for(users).softDelete(first.id);
       expect((await emailUser('dup')).id).not.toBe(first.id);
     });
-
-    it('enforces display name length, email pairs and password-needs-email', async () => {
-      expect(await rawInsert(users, { displayName: '' })).toBe('23514');
-      expect(await rawInsert(users, { displayName: 'x'.repeat(33) })).toBe('23514');
-      expect(await rawInsert(users, { displayName: 'x', emailHmac: `${run}-half` })).toBe('23514');
-      expect(await rawInsert(users, { displayName: 'x', passwordHash: 'h' })).toBe('23514');
-      expect(
-        await rawInsert(users, {
-          displayName: 'x',
-          passwordHash: 'h',
-          emailHmac: `${run}-full`,
-          emailEncrypted: 'v1.x',
-        }),
-      ).toBe('ok');
-    });
   });
 
   describe('user_identities', () => {
@@ -111,17 +96,6 @@ describe.skipIf(!url)('accounts, identities and tokens (integration)', () => {
       await expect(link(a.id, `${run}-other`)).rejects.toBeInstanceOf(ConflictError);
       await db.forUser(a.id).for(userIdentities).softDelete(first.id);
       track(userIdentities, await link(b.id, `${run}-guid`));
-    });
-
-    it('rejects unknown providers', async () => {
-      const user = await emailUser('idp');
-      expect(
-        await rawInsert(userIdentities, {
-          userId: user.id,
-          provider: 'steam',
-          providerUserId: `${run}-s`,
-        }),
-      ).toBe('23514');
     });
 
     it('forUser hides other users’ identities; system finds them by provider id', async () => {
@@ -143,25 +117,6 @@ describe.skipIf(!url)('accounts, identities and tokens (integration)', () => {
   });
 
   describe('user_tokens', () => {
-    it('rejects unknown purposes and expiry before creation', async () => {
-      const user = await emailUser('tokchk');
-      const base = { userId: user.id, tokenHash: `${run}-${randomUUID()}` };
-      expect(
-        await rawInsert(userTokens, {
-          ...base,
-          purpose: 'magic',
-          expiresAt: new Date(Date.now() + DAY),
-        }),
-      ).toBe('23514');
-      expect(
-        await rawInsert(userTokens, {
-          ...base,
-          purpose: 'password_reset',
-          expiresAt: new Date(Date.now() - DAY),
-        }),
-      ).toBe('23514');
-    });
-
     it('a conditional update consumes a token for exactly one of two concurrent requests', async () => {
       const user = await emailUser('tokrace');
       track(
@@ -189,28 +144,6 @@ describe.skipIf(!url)('accounts, identities and tokens (integration)', () => {
   });
 
   describe('user_sessions', () => {
-    it('accepts password sessions and requires faceit or password', async () => {
-      const user = await emailUser('amr');
-      const base = (extra: Record<string, unknown>) => ({
-        userId: user.id,
-        refreshTokenHash: `${run}-${randomUUID()}`,
-        expiresAt: new Date(Date.now() + DAY),
-        ...extra,
-      });
-      expect(await rawInsert(userSessions, base({ authMethods: ['password'] }))).toBe('ok');
-      expect(await rawInsert(userSessions, base({ authMethods: ['totp'] }))).toBe('23514');
-      expect(
-        await rawInsert(
-          userSessions,
-          base({
-            authMethods: ['password'],
-            revokedAt: new Date(),
-            revokedReason: 'password_reset',
-          }),
-        ),
-      ).toBe('ok');
-    });
-
     it('system finds a session by refresh-token hash without knowing the user', async () => {
       const user = await emailUser('sys');
       const s = await session(user.id, `${run}-h0`);

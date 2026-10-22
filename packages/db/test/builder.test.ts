@@ -189,8 +189,8 @@ describe('joins', () => {
   });
 
   it('returns plain rows without relations and nested rows with them', async () => {
-    const team = ['t1', null, null, null, 'NAVI', 'NAVI', 'u1', 'u1'];
-    const user = ['u1', null, null, null, 'p1', true];
+    const team = ['t1', 'NAVI', 'NAVI', 'u1', 'u1', null, null, null];
+    const user = ['u1', 'p1', true, 'Cap', null, null, null, null, null, null, null];
     const captain = { captain: { schema: users, field: teams.captainUserId, reference: users.id } };
 
     const plain = fakeDb([[team]]);
@@ -234,7 +234,9 @@ describe('writes', () => {
         ...({ userId: 'someone-else', id: 'x', deletedAt: new Date(0) } as object),
       });
     const { sql, params } = calls[0]!;
-    expect(sql).toMatch(/values \(default, default, default, default, \$1, \$2,/);
+    expect(sql).toMatch(
+      /values \(default, \$1, \$2, default, default, default, default, default, \$3,/,
+    );
     expect(params[0]).toBe(USER_ID);
     expect(params).not.toContain('someone-else');
     expect(params).not.toContain('x');
@@ -246,7 +248,7 @@ describe('writes', () => {
       name: 'New',
       ...({ createdBy: 'u2', id: 'x', deletedAt: null } as object),
     });
-    expect(calls[0]!.sql).toMatch(/^update "teams" set "updated_at" = \$1, "name" = \$2 where/);
+    expect(calls[0]!.sql).toMatch(/^update "teams" set "name" = \$1, "updated_at" = \$2 where/);
   });
 
   it('update and softDelete throw NotFoundError when nothing matched', async () => {

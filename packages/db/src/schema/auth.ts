@@ -1,46 +1,31 @@
-import { sql } from 'drizzle-orm';
-import { bigint, check, index, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { baseColumns, live, timestamptz } from './columns';
+import { and, isNull } from 'drizzle-orm';
+import { bigint, index, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { id, timestamps, timestamptz } from './columns';
+import { authMethod, sessionRevokedReason, twoFactorType } from './enums';
 import { users } from './users';
-
-export const AUTH_METHODS = ['faceit', 'password', 'totp', 'trusted_device'] as const;
-export const SESSION_REVOKED_REASONS = [
-  'logout',
-  'reuse_detected',
-  'user_revoked',
-  'two_factor_reset',
-  'password_reset',
-] as const;
-
-export type AuthMethod = (typeof AUTH_METHODS)[number];
-export type SessionRevokedReason = (typeof SESSION_REVOKED_REASONS)[number];
-
-const inList = (values: readonly string[]) => sql.raw(values.map((v) => `'${v}'`).join(', '));
 
 export const userTwoFactors = pgTable(
   'user_two_factors',
   {
-    ...baseColumns(),
+    id: id(),
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id),
-    type: text('type', { enum: ['totp'] })
-      .notNull()
-      .default('totp'),
+    type: twoFactorType('type').notNull().default('totp'),
     secretEncrypted: text('secret_encrypted').notNull(),
     lastUsedStep: bigint('last_used_step', { mode: 'number' }),
     enabledAt: timestamptz('enabled_at'),
+    ...timestamps(),
   },
   (t) => [
-    uniqueIndex('user_two_factors_user_type_key').on(t.userId, t.type).where(live),
-    check('user_two_factors_type_check', sql`${t.type} in ('totp')`),
+    uniqueIndex('user_two_factors_user_type_key').on(t.userId, t.type).where(isNull(t.deletedAt)),
   ],
 );
 
 export const trustedDevices = pgTable(
   'trusted_devices',
   {
-    ...baseColumns(),
+    id: id(),
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id),
@@ -52,20 +37,20 @@ export const trustedDevices = pgTable(
     lastUsedAt: timestamptz('last_used_at'),
     expiresAt: timestamptz('expires_at').notNull(),
     revokedAt: timestamptz('revoked_at'),
+    ...timestamps(),
   },
   (t) => [
     index('trusted_devices_user_active_idx')
       .on(t.userId)
-      .where(sql`revoked_at is null and deleted_at is null`),
-    index('trusted_devices_ip_hmac_idx').on(t.ipHmac).where(live),
-    check('trusted_devices_expiry_check', sql`${t.expiresAt} > ${t.createdAt}`),
+      .where(and(isNull(t.revokedAt), isNull(t.deletedAt))!),
+    index('trusted_devices_ip_hmac_idx').on(t.ipHmac).where(isNull(t.deletedAt)),
   ],
 );
 
 export const userSessions = pgTable(
   'user_sessions',
   {
-    ...baseColumns(),
+    id: id(),
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id),
@@ -73,7 +58,7 @@ export const userSessions = pgTable(
       .notNull()
       .unique('user_sessions_refresh_token_hash_key'),
     previousRefreshTokenHash: text('previous_refresh_token_hash'),
-    authMethods: text('auth_methods', { enum: AUTH_METHODS }).array().notNull(),
+    authMethods: authMethod('auth_methods').array().notNull(),
     trustedDeviceId: uuid('trusted_device_id').references(() => trustedDevices.id),
     userAgent: text('user_agent'),
     ipEncrypted: text('ip_encrypted'),
@@ -81,26 +66,15 @@ export const userSessions = pgTable(
     lastRefreshedAt: timestamptz('last_refreshed_at').notNull().defaultNow(),
     expiresAt: timestamptz('expires_at').notNull(),
     revokedAt: timestamptz('revoked_at'),
-    revokedReason: text('revoked_reason', { enum: SESSION_REVOKED_REASONS }),
+    revokedReason: sessionRevokedReason('revoked_reason'),
+    ...timestamps(),
   },
   (t) => [
     index('user_sessions_user_active_idx')
       .on(t.userId)
-      .where(sql`revoked_at is null and deleted_at is null`),
+      .where(and(isNull(t.revokedAt), isNull(t.deletedAt))!),
     index('user_sessions_previous_refresh_token_hash_idx').on(t.previousRefreshTokenHash),
     index('user_sessions_expires_at_idx').on(t.expiresAt),
-    index('user_sessions_ip_hmac_idx').on(t.ipHmac).where(live),
-    check(
-      'user_sessions_auth_methods_check',
-      sql`${t.authMethods} <@ array[${inList(AUTH_METHODS)}]::text[] and ('faceit' = any(${t.authMethods}) or 'password' = any(${t.authMethods}))`,
-    ),
-    check(
-      'user_sessions_revoked_reason_check',
-      sql`${t.revokedReason} in (${inList(SESSION_REVOKED_REASONS)})`,
-    ),
-    check(
-      'user_sessions_revoked_check',
-      sql`(${t.revokedAt} is null) = (${t.revokedReason} is null)`,
-    ),
+    index('user_sessions_ip_hmac_idx').on(t.ipHmac).where(isNull(t.deletedAt)),
   ],
 );
