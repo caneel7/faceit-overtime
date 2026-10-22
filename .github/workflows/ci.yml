@@ -52,13 +52,13 @@ jobs:
       - name: Branch expiry
         id: expiry
         run: echo "at=$(date -u -d '+2 hours' +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
-      - name: Create Neon branch from main
+      - name: Create Neon branch from production
         id: neon
         uses: neondatabase/create-branch-action@v6
         with:
           project_id: ${{ secrets.NEON_PROJECT_ID }}
           api_key: ${{ secrets.NEON_API_KEY }}
-          parent_branch: main
+          parent_branch: production
           branch_name: ci-pr-${{ github.event.number }}-${{ github.run_id }}-${{ github.run_attempt }}
           expires_at: ${{ steps.expiry.outputs.at }}
       - name: Migrate

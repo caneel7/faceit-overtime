@@ -63,7 +63,7 @@ jobs:
         with:
           ref: ${{ env.VERSION }}
       - uses: ./.github/actions/setup
-      - name: drizzle-kit migrate (Neon main, direct connection)
+      - name: drizzle-kit migrate (Neon production branch, direct connection)
         working-directory: packages/db
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
