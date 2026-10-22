@@ -8,7 +8,9 @@
     },
     "typecheck": {},
     "lint": {},
-    "test": {},
+    "test": {
+      "env": ["DATABASE_URL", "REQUIRE_DATABASE"]
+    },
     "test:stories": {},
     "dev": {
       "cache": false,

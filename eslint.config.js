@@ -21,6 +21,8 @@ const serverOnlyForClients = {
       allowTypeImports: true,
       message: 'Only `import type` from the api (e.g. AppType).',
     },
+    { name: '@overtime/db', message: 'Database access stays in apps/api.' },
+    { name: '@overtime/db/unscoped', message: 'Database access stays in apps/api.' },
   ],
   patterns: [
     {
@@ -95,8 +97,47 @@ export default defineConfig([
   },
 
   {
-    files: ['apps/web/**/*.{ts,tsx}', 'packages/ui/**/*.{ts,tsx}', 'packages/db/**/*.ts'],
+    files: ['apps/web/**/*.{ts,tsx}', 'packages/ui/**/*.{ts,tsx}'],
     rules: { 'no-restricted-imports': ['error', serverOnlyForClients] },
+  },
+
+  // db is server-only: it may use AppError from @overtime/shared/hono, but not Hono itself or the api
+  {
+    files: ['packages/db/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [{ name: '@overtime/api', message: 'packages/db must not depend on the api.' }],
+          patterns: [
+            {
+              regex: '^(hono(/.*)?|hono-openapi(/.*)?|@hono/.*)$',
+              message:
+                'packages/db must not use Hono directly. Use AppError from @overtime/shared/hono.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  // Raw, unscoped database access: packages/db internals, scripts and test setup only
+  {
+    files: ['apps/api/src/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@overtime/db/unscoped',
+              message:
+                'Use db.global / db.forUser. Unscoped queries belong in packages/db/src/queries.',
+            },
+          ],
+        },
+      ],
+    },
   },
 
   // The engine is pure: no imports from outside the package (tests may use vitest)
