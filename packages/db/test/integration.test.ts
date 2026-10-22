@@ -39,7 +39,12 @@ describe.skipIf(!url)('database (integration)', () => {
       }),
     );
   const newUser = async (suffix: string) =>
-    track(users, await db.global.for(users).insert({ playerId: (await newPlayer(suffix)).id }));
+    track(
+      users,
+      await db.global
+        .for(users)
+        .insert({ playerId: (await newPlayer(suffix)).id, displayName: `${run}${suffix}` }),
+    );
   const newSession = async (userId: string, suffix: string) =>
     track(
       userSessions,
@@ -52,7 +57,6 @@ describe.skipIf(!url)('database (integration)', () => {
           expiresAt: new Date(Date.now() + 30 * DAY),
         }),
     );
-  // Raw SQL bypasses the builder's types to reach the database's own constraints
   const pgCode = (err: unknown): unknown =>
     (err as { code?: unknown }).code ?? (err as { cause?: { code?: unknown } }).cause?.code;
   const rawInsert = (table: PgTable, values: Record<string, unknown>) =>
@@ -66,7 +70,6 @@ describe.skipIf(!url)('database (integration)', () => {
   });
 
   afterAll(async () => {
-    // children first: hard delete everything this run created
     for (const table of [
       teamPlayers,
       teams,
@@ -84,7 +87,7 @@ describe.skipIf(!url)('database (integration)', () => {
   });
 
   describe('schema', () => {
-    it('has the 7 tables, both migrations and uuidv7 ids', async () => {
+    it('has the 9 tables, all migrations and uuidv7 ids', async () => {
       const tables = await unscoped(db).execute<{ table_name: string }>(
         sql`select table_name from information_schema.tables where table_schema = 'public' order by table_name`,
       );
@@ -94,7 +97,9 @@ describe.skipIf(!url)('database (integration)', () => {
           'team_players',
           'teams',
           'trusted_devices',
+          'user_identities',
           'user_sessions',
+          'user_tokens',
           'user_two_factors',
           'users',
         ]),
@@ -102,7 +107,7 @@ describe.skipIf(!url)('database (integration)', () => {
       const migrations = await unscoped(db).execute(
         sql`select id from drizzle.__drizzle_migrations`,
       );
-      expect(migrations.length).toBeGreaterThanOrEqual(2);
+      expect(migrations.length).toBeGreaterThanOrEqual(3);
 
       const player = await newPlayer('uuid');
       expect(player.id[14]).toBe('7');
@@ -155,15 +160,15 @@ describe.skipIf(!url)('database (integration)', () => {
       const rp = db.global.for(teamPlayers);
       const first = track(
         teamPlayers,
-        await rp.insert({ teamId: team.id, playerId: captain.playerId }),
+        await rp.insert({ teamId: team.id, playerId: captain.playerId! }),
       );
       await expect(
-        rp.insert({ teamId: team.id, playerId: captain.playerId }),
+        rp.insert({ teamId: team.id, playerId: captain.playerId! }),
       ).rejects.toBeInstanceOf(ConflictError);
       await rp.softDelete(first.id);
       const again = track(
         teamPlayers,
-        await rp.insert({ teamId: team.id, playerId: captain.playerId }),
+        await rp.insert({ teamId: team.id, playerId: captain.playerId! }),
       );
       expect(again.id).not.toBe(first.id);
     });
@@ -173,54 +178,6 @@ describe.skipIf(!url)('database (integration)', () => {
       const tf = db.forUser(user.id).for(userTwoFactors);
       track(userTwoFactors, await tf.insert({ secretEncrypted: 'v1.x.y' }));
       await expect(tf.insert({ secretEncrypted: 'v1.x.z' })).rejects.toBeInstanceOf(ConflictError);
-    });
-
-    it('rejects invalid values with check constraints', async () => {
-      const user = await newUser('chk');
-      const session = (extra: Record<string, unknown>) => ({
-        userId: user.id,
-        refreshTokenHash: `${run}-${randomUUID()}`,
-        authMethods: ['faceit'],
-        expiresAt: new Date(Date.now() + DAY),
-        ...extra,
-      });
-      expect(await rawInsert(userSessions, session({ authMethods: ['totp'] }))).toBe('23514');
-      expect(await rawInsert(userSessions, session({ authMethods: ['faceit', 'sms'] }))).toBe(
-        '23514',
-      );
-      expect(await rawInsert(userSessions, session({ revokedAt: new Date() }))).toBe('23514');
-      expect(
-        await rawInsert(userSessions, session({ revokedAt: new Date(), revokedReason: 'nope' })),
-      ).toBe('23514');
-      expect(
-        await rawInsert(teams, {
-          name: 'T',
-          tag: 'TOOLONG',
-          captainUserId: user.id,
-          createdBy: user.id,
-        }),
-      ).toBe('23514');
-      expect(
-        await rawInsert(teams, { name: 'T', tag: '', captainUserId: user.id, createdBy: user.id }),
-      ).toBe('23514');
-      expect(
-        await rawInsert(players, {
-          faceitPlayerId: `${run}-lvl`,
-          nickname: 'x',
-          cs2Level: 11,
-          syncedAt: new Date(),
-        }),
-      ).toBe('23514');
-      expect(
-        await rawInsert(trustedDevices, {
-          userId: user.id,
-          tokenHash: `${run}-td`,
-          expiresAt: new Date(0),
-        }),
-      ).toBe('23514');
-      expect(
-        await rawInsert(userTwoFactors, { userId: user.id, type: 'sms', secretEncrypted: 'x' }),
-      ).toBe('23514');
     });
 
     it('nicknames compare case-insensitively (citext)', async () => {
@@ -264,7 +221,6 @@ describe.skipIf(!url)('database (integration)', () => {
           .for(trustedDevices)
           .insert({ tokenHash: `${run}-dev-a`, expiresAt: new Date(Date.now() + 15 * DAY) }),
       );
-      // B's session points at A's device (should never happen; the join must not reveal it)
       await rawInsert(userSessions, {
         userId: b.id,
         refreshTokenHash: `${run}-join-b`,

@@ -17,8 +17,9 @@ import type {
   PgTable,
   SelectedFields,
 } from 'drizzle-orm/pg-core';
-import { NotFoundError, QueryBuilderError, toConflictError } from './errors';
+import { ConflictError, NotFoundError, QueryBuilderError, toConflictError } from './errors';
 import type {
+  Col,
   FindOpts,
   JoinKind,
   JoinSpec,
@@ -104,7 +105,6 @@ export class QueryBuilder<
     return deletedAt ? isNull(deletedAt) : undefined;
   }
 
-  // Scope + soft delete + id, for writes. A wrong user and a deleted row look the same: nothing matches.
   #guard(extra?: SQL): SQL | undefined {
     return and(this.#ownerCondition(this.table), this.#notDeleted(this.table), extra);
   }
@@ -135,7 +135,6 @@ export class QueryBuilder<
     });
   }
 
-  // One SELECT for find/findOne/paginate/count. Joined-table checks go in ON, so a LEFT JOIN stays a left join.
   #select<J extends JoinSpec<R>>(opts: FindOpts<T, R, J>, mode: 'rows' | 'page' | 'count') {
     const joins = this.#joins(opts.relations);
     const nested = joins.length > 0;
@@ -185,8 +184,6 @@ export class QueryBuilder<
     return query;
   }
 
-  // ---- reads ----
-
   async find<J extends JoinSpec<R> = Record<never, never>>(
     opts: FindOpts<T, R, J> = {},
   ): Promise<Result<T, R, J>[]> {
@@ -218,7 +215,6 @@ export class QueryBuilder<
     return row?.count ?? 0;
   }
 
-  // items and total from one query (count(*) OVER ()). Joins must be to-one, or the total counts join rows.
   async paginate<J extends JoinSpec<R> = Record<never, never>>(
     opts: Omit<FindOpts<T, R, J>, 'limit' | 'offset'> & { page: number; pageSize: number },
   ): Promise<Page<Result<T, R, J>>> {
@@ -233,7 +229,6 @@ export class QueryBuilder<
       'page',
     )) as (Record<string, unknown> & { __total?: number })[];
 
-    // past the last page there are no rows to carry the total
     const total = rows[0]?.__total ?? (page > 1 ? await this.count(rest) : 0);
     for (const row of rows) delete row.__total;
     return { items: rows as Result<T, R, J>[], total };
@@ -244,8 +239,6 @@ export class QueryBuilder<
   ): { sql: string; params: unknown[] } {
     return this.#select(opts, 'rows').toSQL();
   }
-
-  // ---- writes: scope column and timestamps come from here, never from the caller ----
 
   #prepareInsert(values: NewRow<T, ScopeCol>): Record<string, unknown> {
     const row: Record<string, unknown> = { ...values };
@@ -284,6 +277,34 @@ export class QueryBuilder<
         .values(rows as never)
         .returning(),
     )) as Row<T>[];
+  }
+
+  async upsert(
+    values: NewRow<T, ScopeCol>,
+    opts: { conflict: readonly Col<T>[]; set: Patch<T, ScopeCol> },
+  ): Promise<Row<T>> {
+    if (opts.conflict.length === 0) throw new QueryBuilderError('upsert needs conflict columns');
+    const target = opts.conflict.map((name) => {
+      const col = column(this.table, name);
+      if (!col) throw new QueryBuilderError(`Unknown column "${name}" in conflict target`);
+      return col;
+    });
+    const set: Record<string, unknown> = this.#preparePatch(opts.set);
+    if (column(this.table, 'updatedAt')) set.updatedAt = sql`now()`;
+    const deletedAt = column(this.table, 'deletedAt');
+    const query = this.db
+      .insert(this.table)
+      .values(this.#prepareInsert(values) as never)
+      .onConflictDoUpdate({
+        target: target as never,
+        targetWhere: deletedAt ? isNull(deletedAt) : undefined,
+        set: set as never,
+        setWhere: this.#ownerCondition(this.table),
+      })
+      .returning();
+    const [row] = (await mapConflict(query)) as Row<T>[];
+    if (!row) throw new ConflictError();
+    return row;
   }
 
   async update(id: string, values: Patch<T, ScopeCol>): Promise<Row<T>> {

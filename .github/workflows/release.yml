@@ -107,7 +107,6 @@ jobs:
         working-directory: apps/web
         run: bunx opennextjs-cloudflare deploy --env production
 
-  # Drop anything Cloudflare cached from the previous release so nobody is served stale responses
   purge-cache:
     name: Purge Cloudflare cache
     needs: deploy-web

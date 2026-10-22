@@ -7,8 +7,10 @@ import {
   teamPlayers,
   teams,
   trustedDevices,
+  userIdentities,
   users,
   userSessions,
+  userTokens,
   userTwoFactors,
 } from '../src/schema';
 import { fakeDb } from './fake-db';
@@ -23,6 +25,8 @@ const PATCHES = new Map<PgTable, Record<string, unknown>>([
   [userSessions, { userAgent: 'ua' }],
   [userTwoFactors, { lastUsedStep: 1 }],
   [trustedDevices, { label: 'Phone' }],
+  [userIdentities, { providerUserId: 'other' }],
+  [userTokens, { usedAt: new Date(0) }],
 ]);
 
 type Loose = {
@@ -65,7 +69,7 @@ async function run(
 
 describe('every method × every table', () => {
   const globalTables = [players, users, teams, teamPlayers];
-  const userTables = [userSessions, userTwoFactors, trustedDevices];
+  const userTables = [userSessions, userTwoFactors, trustedDevices, userIdentities, userTokens];
 
   for (const table of globalTables) {
     const name = getTableName(table);
@@ -185,8 +189,8 @@ describe('joins', () => {
   });
 
   it('returns plain rows without relations and nested rows with them', async () => {
-    const team = ['t1', null, null, null, 'NAVI', 'NAVI', 'u1', 'u1'];
-    const user = ['u1', null, null, null, 'p1', true];
+    const team = ['t1', 'NAVI', 'NAVI', 'u1', 'u1', null, null, null];
+    const user = ['u1', 'p1', true, 'Cap', null, null, null, null, null, null, null];
     const captain = { captain: { schema: users, field: teams.captainUserId, reference: users.id } };
 
     const plain = fakeDb([[team]]);
@@ -230,7 +234,9 @@ describe('writes', () => {
         ...({ userId: 'someone-else', id: 'x', deletedAt: new Date(0) } as object),
       });
     const { sql, params } = calls[0]!;
-    expect(sql).toMatch(/values \(default, default, default, default, \$1, \$2,/);
+    expect(sql).toMatch(
+      /values \(default, \$1, \$2, default, default, default, default, default, \$3,/,
+    );
     expect(params[0]).toBe(USER_ID);
     expect(params).not.toContain('someone-else');
     expect(params).not.toContain('x');
@@ -242,7 +248,7 @@ describe('writes', () => {
       name: 'New',
       ...({ createdBy: 'u2', id: 'x', deletedAt: null } as object),
     });
-    expect(calls[0]!.sql).toMatch(/^update "teams" set "updated_at" = \$1, "name" = \$2 where/);
+    expect(calls[0]!.sql).toMatch(/^update "teams" set "name" = \$1, "updated_at" = \$2 where/);
   });
 
   it('update and softDelete throw NotFoundError when nothing matched', async () => {
@@ -352,5 +358,67 @@ describe('client', () => {
     const { db, calls } = fakeDb();
     await db.ping();
     expect(calls[0]!.sql).toBe('select 1');
+  });
+});
+
+describe('system scope', () => {
+  it('reads user-owned tables without a user filter but still hides deleted rows', async () => {
+    const { db, calls } = fakeDb();
+    await db.system.for(userSessions).findOne({ where: { refreshTokenHash: 'h' } });
+    expect(calls[0]!.sql).toContain('"user_sessions"."deleted_at" is null');
+    expect(calls[0]!.sql).not.toMatch(/"user_id" = /);
+  });
+
+  it('guards conditional updates with deleted_at too', async () => {
+    const { db, calls } = fakeDb();
+    await db.system
+      .for(userTokens)
+      .updateWithWhere({ tokenHash: 'h', usedAt: null }, { usedAt: new Date() });
+    expect(calls[0]!.sql).toMatch(/^update "user_tokens"/);
+    expect(calls[0]!.sql).toContain('"user_tokens"."deleted_at" is null');
+    expect(calls[0]!.sql).toContain('"user_tokens"."used_at" is null');
+  });
+});
+
+describe('upsert', () => {
+  it('targets the live row of the business key and bumps updated_at', async () => {
+    const { db, calls } = fakeDb([[{ id: 'p1' }]]);
+    await db.global
+      .for(players)
+      .upsert(
+        { faceitPlayerId: 'f1', nickname: 'n', syncedAt: new Date() },
+        { conflict: ['faceitPlayerId'], set: { nickname: 'n' } },
+      );
+    expect(calls[0]!.sql).toMatch(
+      /on conflict \("faceit_player_id"\) where "players"."deleted_at" is null do update set/,
+    );
+    expect(calls[0]!.sql).toContain('"updated_at" = now()');
+  });
+
+  it('in a user scope, only updates the same user’s row and throws when nothing came back', async () => {
+    const { db, calls } = fakeDb([[]]);
+    await expect(
+      db
+        .forUser(USER_ID)
+        .for(userIdentities)
+        .upsert(
+          { provider: 'faceit', providerUserId: 'g' },
+          { conflict: ['provider', 'providerUserId'], set: { providerUserId: 'g' } },
+        ),
+    ).rejects.toBeInstanceOf(ConflictError);
+    expect(calls[0]!.sql).toMatch(/do update set .* where "user_identities"."user_id" = \$\d/);
+    expect(calls[0]!.params).toContain(USER_ID);
+  });
+
+  it('rejects an empty conflict target', async () => {
+    const { db } = fakeDb();
+    await expect(
+      db.global
+        .for(players)
+        .upsert(
+          { faceitPlayerId: 'f', nickname: 'n', syncedAt: new Date() },
+          { conflict: [], set: { nickname: 'n' } },
+        ),
+    ).rejects.toBeInstanceOf(QueryBuilderError);
   });
 });

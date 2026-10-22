@@ -15,6 +15,7 @@ const buttonVariants = cva(
         destructive:
           'bg-destructive text-destructive-foreground hover:bg-destructive/90 focus-visible:ring-destructive/40',
         link: 'text-primary underline-offset-4 hover:underline',
+        faceit: 'bg-[#d14700] font-bold tracking-wide text-white uppercase hover:bg-[#b83e00]',
       },
       size: {
         default: 'h-9 px-4 py-2 has-[>svg]:px-3',

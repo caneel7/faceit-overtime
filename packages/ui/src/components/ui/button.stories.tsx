@@ -12,7 +12,7 @@ const meta = {
   argTypes: {
     variant: {
       control: 'select',
-      options: ['default', 'secondary', 'outline', 'ghost', 'destructive', 'link'],
+      options: ['default', 'secondary', 'outline', 'ghost', 'destructive', 'link', 'faceit'],
     },
     size: { control: 'select', options: ['default', 'sm', 'lg', 'icon'] },
   },
@@ -28,7 +28,15 @@ export const Default: Story = {
   },
 };
 
-const variants = ['default', 'secondary', 'outline', 'ghost', 'destructive', 'link'] as const;
+const variants = [
+  'default',
+  'secondary',
+  'outline',
+  'ghost',
+  'destructive',
+  'link',
+  'faceit',
+] as const;
 
 export const Variants: Story = {
   render: (args) => (
@@ -49,5 +57,15 @@ export const Disabled: Story = {
     await expect(button).toBeDisabled();
     button.click();
     await expect(args.onClick).not.toHaveBeenCalled();
+  },
+};
+
+export const Faceit: Story = {
+  args: { variant: 'faceit', children: 'Sign in with FACEIT' },
+  play: async ({ canvas }) => {
+    const button = canvas.getByRole('button', { name: 'Sign in with FACEIT' });
+    await expect(getComputedStyle(button).backgroundColor).toBe('rgb(209, 71, 0)');
+    await expect(getComputedStyle(button).textTransform).toBe('uppercase');
+    await expect(button.offsetHeight).toBe(36);
   },
 };
