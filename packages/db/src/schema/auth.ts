@@ -33,7 +33,6 @@ export const userTwoFactors = pgTable(
   ],
 );
 
-// Lets a user skip 2FA on one browser for 15 days. Only the SHA-256 of the cookie token is stored.
 export const trustedDevices = pgTable(
   'trusted_devices',
   {
@@ -47,7 +46,6 @@ export const trustedDevices = pgTable(
     ipEncrypted: text('ip_encrypted'),
     ipHmac: text('ip_hmac'),
     lastUsedAt: timestamptz('last_used_at'),
-    // fixed at created_at + 15 days; using the device doesn't extend it
     expiresAt: timestamptz('expires_at').notNull(),
     revokedAt: timestamptz('revoked_at'),
   },
@@ -60,7 +58,6 @@ export const trustedDevices = pgTable(
   ],
 );
 
-// One signed-in browser. Backs the refresh token; the access token is a short-lived JWT.
 export const userSessions = pgTable(
   'user_sessions',
   {
@@ -71,7 +68,6 @@ export const userSessions = pgTable(
     refreshTokenHash: text('refresh_token_hash')
       .notNull()
       .unique('user_sessions_refresh_token_hash_key'),
-    // the token this one replaced; presenting it again means it was stolen
     previousRefreshTokenHash: text('previous_refresh_token_hash'),
     authMethods: text('auth_methods', { enum: AUTH_METHODS }).array().notNull(),
     trustedDeviceId: uuid('trusted_device_id').references(() => trustedDevices.id),

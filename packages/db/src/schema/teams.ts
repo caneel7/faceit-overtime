@@ -23,7 +23,6 @@ export const teams = pgTable(
   ],
 );
 
-// Own id instead of (team_id, player_id): a player who left and rejoins gets a new row
 export const teamPlayers = pgTable(
   'team_players',
   {

@@ -52,7 +52,6 @@ describe.skipIf(!url)('database (integration)', () => {
           expiresAt: new Date(Date.now() + 30 * DAY),
         }),
     );
-  // Raw SQL bypasses the builder's types to reach the database's own constraints
   const pgCode = (err: unknown): unknown =>
     (err as { code?: unknown }).code ?? (err as { cause?: { code?: unknown } }).cause?.code;
   const rawInsert = (table: PgTable, values: Record<string, unknown>) =>
@@ -66,7 +65,6 @@ describe.skipIf(!url)('database (integration)', () => {
   });
 
   afterAll(async () => {
-    // children first: hard delete everything this run created
     for (const table of [
       teamPlayers,
       teams,
@@ -264,7 +262,6 @@ describe.skipIf(!url)('database (integration)', () => {
           .for(trustedDevices)
           .insert({ tokenHash: `${run}-dev-a`, expiresAt: new Date(Date.now() + 15 * DAY) }),
       );
-      // B's session points at A's device (should never happen; the join must not reveal it)
       await rawInsert(userSessions, {
         userId: b.id,
         refreshTokenHash: `${run}-join-b`,

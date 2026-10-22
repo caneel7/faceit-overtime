@@ -104,7 +104,6 @@ export class QueryBuilder<
     return deletedAt ? isNull(deletedAt) : undefined;
   }
 
-  // Scope + soft delete + id, for writes. A wrong user and a deleted row look the same: nothing matches.
   #guard(extra?: SQL): SQL | undefined {
     return and(this.#ownerCondition(this.table), this.#notDeleted(this.table), extra);
   }
@@ -135,7 +134,6 @@ export class QueryBuilder<
     });
   }
 
-  // One SELECT for find/findOne/paginate/count. Joined-table checks go in ON, so a LEFT JOIN stays a left join.
   #select<J extends JoinSpec<R>>(opts: FindOpts<T, R, J>, mode: 'rows' | 'page' | 'count') {
     const joins = this.#joins(opts.relations);
     const nested = joins.length > 0;
@@ -185,8 +183,6 @@ export class QueryBuilder<
     return query;
   }
 
-  // ---- reads ----
-
   async find<J extends JoinSpec<R> = Record<never, never>>(
     opts: FindOpts<T, R, J> = {},
   ): Promise<Result<T, R, J>[]> {
@@ -218,7 +214,6 @@ export class QueryBuilder<
     return row?.count ?? 0;
   }
 
-  // items and total from one query (count(*) OVER ()). Joins must be to-one, or the total counts join rows.
   async paginate<J extends JoinSpec<R> = Record<never, never>>(
     opts: Omit<FindOpts<T, R, J>, 'limit' | 'offset'> & { page: number; pageSize: number },
   ): Promise<Page<Result<T, R, J>>> {
@@ -233,7 +228,6 @@ export class QueryBuilder<
       'page',
     )) as (Record<string, unknown> & { __total?: number })[];
 
-    // past the last page there are no rows to carry the total
     const total = rows[0]?.__total ?? (page > 1 ? await this.count(rest) : 0);
     for (const row of rows) delete row.__total;
     return { items: rows as Result<T, R, J>[], total };
@@ -244,8 +238,6 @@ export class QueryBuilder<
   ): { sql: string; params: unknown[] } {
     return this.#select(opts, 'rows').toSQL();
   }
-
-  // ---- writes: scope column and timestamps come from here, never from the caller ----
 
   #prepareInsert(values: NewRow<T, ScopeCol>): Record<string, unknown> {
     const row: Record<string, unknown> = { ...values };

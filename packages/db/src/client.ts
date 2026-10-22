@@ -93,7 +93,6 @@ export function makeClient(
   return client;
 }
 
-// One client per request. postgres.js connects on the first query, so routes that never query never connect.
 export function createDbClient(connectionString: string, opts: DbClientOptions = {}): DbClient {
   const { connectTimeoutMs = 10_000, pingTimeoutMs = 2000, max = 5 } = opts;
   const sqlClient = postgres(connectionString, {
