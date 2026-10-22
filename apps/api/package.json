@@ -15,6 +15,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@overtime/db": "workspace:*",
     "@overtime/shared": "workspace:*",
     "@scalar/hono-api-reference": "0.12.13",
     "hono": "catalog:",

@@ -31,6 +31,7 @@ function logError(c: Context, err: Error, extra?: Record<string, unknown>) {
       path: c.req.path,
       error: err.message,
       stack: err.stack,
+      ...(err.cause instanceof Error ? { cause: err.cause.message } : {}),
       ...extra,
     }),
   );
@@ -39,8 +40,8 @@ function logError(c: Context, err: Error, extra?: Record<string, unknown>) {
 export const onError: ErrorHandler = (err, c) => {
   if (err instanceof AppError) {
     if (err.status >= 500) logError(c, err, { details: err.details });
-    // 5xx details describe our own bugs; keep them out of production responses
-    const exposeDetails = err.status < 500 || c.env?.ENVIRONMENT !== 'production';
+    // INTERNAL details describe our own bugs; keep them out of production responses
+    const exposeDetails = err.code !== 'INTERNAL' || c.env?.ENVIRONMENT !== 'production';
     return errorJson(c, err.status, err.code, err.message, exposeDetails ? err.details : undefined);
   }
 

@@ -17,6 +17,7 @@ const STATUS_BY_CODE: Record<ErrorCode, number> = {
   NOT_FOUND: 404,
   CONFLICT: 409,
   INTERNAL: 500,
+  SERVICE_UNAVAILABLE: 503,
 };
 
 // Several codes can share a status (e.g. two kinds of 409), so group them under one entry

@@ -6,6 +6,7 @@ export const ErrorCode = z.enum([
   'NOT_FOUND',
   'CONFLICT',
   'INTERNAL',
+  'SERVICE_UNAVAILABLE',
 ]);
 export type ErrorCode = z.infer<typeof ErrorCode>;
 
