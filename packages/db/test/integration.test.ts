@@ -39,7 +39,12 @@ describe.skipIf(!url)('database (integration)', () => {
       }),
     );
   const newUser = async (suffix: string) =>
-    track(users, await db.global.for(users).insert({ playerId: (await newPlayer(suffix)).id }));
+    track(
+      users,
+      await db.global
+        .for(users)
+        .insert({ playerId: (await newPlayer(suffix)).id, displayName: `${run}${suffix}` }),
+    );
   const newSession = async (userId: string, suffix: string) =>
     track(
       userSessions,
@@ -82,7 +87,7 @@ describe.skipIf(!url)('database (integration)', () => {
   });
 
   describe('schema', () => {
-    it('has the 7 tables, both migrations and uuidv7 ids', async () => {
+    it('has the 9 tables, all migrations and uuidv7 ids', async () => {
       const tables = await unscoped(db).execute<{ table_name: string }>(
         sql`select table_name from information_schema.tables where table_schema = 'public' order by table_name`,
       );
@@ -92,7 +97,9 @@ describe.skipIf(!url)('database (integration)', () => {
           'team_players',
           'teams',
           'trusted_devices',
+          'user_identities',
           'user_sessions',
+          'user_tokens',
           'user_two_factors',
           'users',
         ]),
@@ -100,7 +107,7 @@ describe.skipIf(!url)('database (integration)', () => {
       const migrations = await unscoped(db).execute(
         sql`select id from drizzle.__drizzle_migrations`,
       );
-      expect(migrations.length).toBeGreaterThanOrEqual(2);
+      expect(migrations.length).toBeGreaterThanOrEqual(3);
 
       const player = await newPlayer('uuid');
       expect(player.id[14]).toBe('7');
@@ -153,15 +160,15 @@ describe.skipIf(!url)('database (integration)', () => {
       const rp = db.global.for(teamPlayers);
       const first = track(
         teamPlayers,
-        await rp.insert({ teamId: team.id, playerId: captain.playerId }),
+        await rp.insert({ teamId: team.id, playerId: captain.playerId! }),
       );
       await expect(
-        rp.insert({ teamId: team.id, playerId: captain.playerId }),
+        rp.insert({ teamId: team.id, playerId: captain.playerId! }),
       ).rejects.toBeInstanceOf(ConflictError);
       await rp.softDelete(first.id);
       const again = track(
         teamPlayers,
-        await rp.insert({ teamId: team.id, playerId: captain.playerId }),
+        await rp.insert({ teamId: team.id, playerId: captain.playerId! }),
       );
       expect(again.id).not.toBe(first.id);
     });

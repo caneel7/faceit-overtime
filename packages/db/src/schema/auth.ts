@@ -3,13 +3,17 @@ import { bigint, check, index, pgTable, text, uniqueIndex, uuid } from 'drizzle-
 import { baseColumns, live, timestamptz } from './columns';
 import { users } from './users';
 
-export const AUTH_METHODS = ['faceit', 'totp', 'trusted_device'] as const;
+export const AUTH_METHODS = ['faceit', 'password', 'totp', 'trusted_device'] as const;
 export const SESSION_REVOKED_REASONS = [
   'logout',
   'reuse_detected',
   'user_revoked',
   'two_factor_reset',
+  'password_reset',
 ] as const;
+
+export type AuthMethod = (typeof AUTH_METHODS)[number];
+export type SessionRevokedReason = (typeof SESSION_REVOKED_REASONS)[number];
 
 const inList = (values: readonly string[]) => sql.raw(values.map((v) => `'${v}'`).join(', '));
 
@@ -88,7 +92,7 @@ export const userSessions = pgTable(
     index('user_sessions_ip_hmac_idx').on(t.ipHmac).where(live),
     check(
       'user_sessions_auth_methods_check',
-      sql`${t.authMethods} <@ array[${inList(AUTH_METHODS)}]::text[] and 'faceit' = any(${t.authMethods})`,
+      sql`${t.authMethods} <@ array[${inList(AUTH_METHODS)}]::text[] and ('faceit' = any(${t.authMethods}) or 'password' = any(${t.authMethods}))`,
     ),
     check(
       'user_sessions_revoked_reason_check',

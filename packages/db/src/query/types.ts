@@ -5,13 +5,20 @@ import type {
   teamPlayers,
   teams,
   trustedDevices,
+  userIdentities,
   users,
   userSessions,
+  userTokens,
   userTwoFactors,
 } from '../schema';
 
 export type GlobalTable = typeof players | typeof users | typeof teams | typeof teamPlayers;
-export type UserTable = typeof userSessions | typeof userTwoFactors | typeof trustedDevices;
+export type UserTable =
+  | typeof userSessions
+  | typeof userTwoFactors
+  | typeof trustedDevices
+  | typeof userIdentities
+  | typeof userTokens;
 export type AnyTable = GlobalTable | UserTable;
 
 export type Row<T extends PgTable> = T['$inferSelect'];

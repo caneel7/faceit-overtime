@@ -2,6 +2,7 @@ export { createDbClient, type DbClient, type DbClientOptions, type Scope } from 
 export { QueryBuilder } from './query/builder';
 export { ConflictError, NotFoundError, QueryBuilderError } from './query/errors';
 export type {
+  AnyTable,
   FindOpts,
   GlobalTable,
   JoinSpec,

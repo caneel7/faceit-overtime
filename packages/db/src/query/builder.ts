@@ -17,8 +17,9 @@ import type {
   PgTable,
   SelectedFields,
 } from 'drizzle-orm/pg-core';
-import { NotFoundError, QueryBuilderError, toConflictError } from './errors';
+import { ConflictError, NotFoundError, QueryBuilderError, toConflictError } from './errors';
 import type {
+  Col,
   FindOpts,
   JoinKind,
   JoinSpec,
@@ -276,6 +277,34 @@ export class QueryBuilder<
         .values(rows as never)
         .returning(),
     )) as Row<T>[];
+  }
+
+  async upsert(
+    values: NewRow<T, ScopeCol>,
+    opts: { conflict: readonly Col<T>[]; set: Patch<T, ScopeCol> },
+  ): Promise<Row<T>> {
+    if (opts.conflict.length === 0) throw new QueryBuilderError('upsert needs conflict columns');
+    const target = opts.conflict.map((name) => {
+      const col = column(this.table, name);
+      if (!col) throw new QueryBuilderError(`Unknown column "${name}" in conflict target`);
+      return col;
+    });
+    const set: Record<string, unknown> = this.#preparePatch(opts.set);
+    if (column(this.table, 'updatedAt')) set.updatedAt = sql`now()`;
+    const deletedAt = column(this.table, 'deletedAt');
+    const query = this.db
+      .insert(this.table)
+      .values(this.#prepareInsert(values) as never)
+      .onConflictDoUpdate({
+        target: target as never,
+        targetWhere: deletedAt ? isNull(deletedAt) : undefined,
+        set: set as never,
+        setWhere: this.#ownerCondition(this.table),
+      })
+      .returning();
+    const [row] = (await mapConflict(query)) as Row<T>[];
+    if (!row) throw new ConflictError();
+    return row;
   }
 
   async update(id: string, values: Patch<T, ScopeCol>): Promise<Row<T>> {

@@ -15,6 +15,13 @@
       "when": 1792663324281,
       "tag": "0001_init",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792678649978,
+      "tag": "0002_accounts_identities_tokens",
+      "breakpoints": true
     }
   ]
 }

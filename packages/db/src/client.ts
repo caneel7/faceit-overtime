@@ -4,19 +4,27 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { QueryBuilder, type Executor, type ScopeConfig } from './query/builder';
 import { QueryBuilderError } from './query/errors';
-import type { GlobalTable, Relations, UserTable } from './query/types';
+import type { AnyTable, GlobalTable, Relations, UserTable } from './query/types';
 import {
   players,
   teamPlayers,
   teams,
   trustedDevices,
+  userIdentities,
   users,
   userSessions,
+  userTokens,
   userTwoFactors,
 } from './schema';
 
 const GLOBAL_TABLES: ReadonlySet<PgTable> = new Set([players, users, teams, teamPlayers]);
-const USER_TABLES: ReadonlySet<PgTable> = new Set([userSessions, userTwoFactors, trustedDevices]);
+const USER_TABLES: ReadonlySet<PgTable> = new Set([
+  userSessions,
+  userTwoFactors,
+  trustedDevices,
+  userIdentities,
+  userTokens,
+]);
 const ALL_TABLES: ReadonlySet<PgTable> = new Set([...GLOBAL_TABLES, ...USER_TABLES]);
 
 export interface Scope<TT extends PgTable, ScopeCol extends string = never> {
@@ -28,6 +36,7 @@ export interface Scope<TT extends PgTable, ScopeCol extends string = never> {
 
 export interface DbClient {
   readonly global: Scope<GlobalTable>;
+  readonly system: Scope<AnyTable>;
   forUser(userId: string): Scope<UserTable | GlobalTable, 'userId'>;
   transaction<R>(fn: (tx: DbClient) => Promise<R>): Promise<R>;
   ping(): Promise<void>;
@@ -68,6 +77,7 @@ export function makeClient(
 ): DbClient {
   const client: DbClient = {
     global: scope(db, { tables: GLOBAL_TABLES }),
+    system: scope(db, { tables: ALL_TABLES }),
     forUser(userId) {
       if (!userId) throw new QueryBuilderError('forUser needs a user id');
       return scope(db, {
