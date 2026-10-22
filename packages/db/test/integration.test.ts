@@ -1,4 +1,3 @@
-// Runs against a migrated database (a Neon branch in CI, the dev branch locally). Skipped without DATABASE_URL.
 import { randomUUID } from 'node:crypto';
 import { inArray, sql } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
@@ -17,7 +16,6 @@ import {
 import { unscoped } from '../src/unscoped';
 
 const url = process.env.DATABASE_URL;
-// CI's db job sets REQUIRE_DATABASE so these tests can't be skipped by a missing secret
 if (process.env.REQUIRE_DATABASE && !url)
   throw new Error('DATABASE_URL is required (REQUIRE_DATABASE is set)');
 const DAY = 24 * 60 * 60 * 1000;

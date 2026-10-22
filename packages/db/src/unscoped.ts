@@ -1,5 +1,3 @@
-// Raw Drizzle access with no scope or soft-delete filter.
-// ESLint only allows this import inside packages/db, scripts and test setup.
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type { DbClient } from './client';
 import { executors } from './client';

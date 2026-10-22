@@ -4,18 +4,15 @@ import { baseColumns, live } from './columns';
 import { players } from './players';
 import { users } from './users';
 
-// Global, not org-scoped: a team can play in any org's tournaments
 export const teams = pgTable(
   'teams',
   {
     ...baseColumns(),
     name: text('name').notNull(),
     tag: text('tag').notNull(),
-    // current captain; changes when the captaincy is transferred
     captainUserId: uuid('captain_user_id')
       .notNull()
       .references(() => users.id),
-    // who created the team; never changes
     createdBy: uuid('created_by')
       .notNull()
       .references(() => users.id),

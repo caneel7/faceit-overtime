@@ -19,26 +19,19 @@ export type Col<T extends PgTable> = keyof Row<T> & string;
 type TableName<T extends PgTable> = T['_']['name'];
 type Value<T extends PgTable, K extends Col<T>> = NonNullable<Row<T>[K]>;
 
-// Set by the database or the scope, never by the caller
 type SystemColumn = 'id' | 'createdAt' | 'updatedAt' | 'deletedAt';
 export type NewRow<T extends PgTable, ScopeCol extends string = never> = Omit<
   T['$inferInsert'],
   SystemColumn | ScopeCol
 >;
-// createdBy is written once on insert and can't be changed through the builder
 export type Patch<T extends PgTable, ScopeCol extends string = never> = Partial<
   Omit<NewRow<T, ScopeCol>, 'createdBy'>
 >;
 
-// ---- relations ----
-
 export type Relation<T extends PgTable, Target extends PgTable = PgTable> = {
   schema: Target;
-  // left side of ON, normally T's foreign key
   field: T['_']['columns'][keyof T['_']['columns']];
-  // right side, normally the joined table's key
   reference: Column;
-  // extra ON condition, e.g. to keep a to-many join to one row
   condition?(rel: Target): SQL;
 };
 export type Relations<T extends PgTable, Target extends PgTable = PgTable> = Record<
@@ -47,8 +40,6 @@ export type Relations<T extends PgTable, Target extends PgTable = PgTable> = Rec
 >;
 export type JoinKind = 'left' | 'inner';
 export type JoinSpec<R> = { [K in keyof R]?: JoinKind };
-
-// ---- getWhere filter ----
 
 export const COMPARISON_OPS = ['>', '>=', '<', '<='] as const;
 export const OPERATORS = [

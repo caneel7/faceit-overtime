@@ -15,7 +15,6 @@ import { fakeDb } from './fake-db';
 
 const USER_ID = '0190a7a0-0000-7000-8000-000000000001';
 
-// One valid patch per table, so every method can run against every table
 const PATCHES = new Map<PgTable, Record<string, unknown>>([
   [players, { country: 'GB' }],
   [users, { faceitVerified: false }],
@@ -26,7 +25,6 @@ const PATCHES = new Map<PgTable, Record<string, unknown>>([
   [trustedDevices, { label: 'Phone' }],
 ]);
 
-// Loose view of the builder for table-driven tests; the typed API is covered by types.test.ts
 type Loose = {
   find(opts?: object): Promise<unknown[]>;
   findOne(opts: object): Promise<unknown>;

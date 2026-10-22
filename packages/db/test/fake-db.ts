@@ -4,7 +4,6 @@ import type { Executor } from '../src/query/builder';
 
 export type Call = { sql: string; params: unknown[] };
 
-// A postgres.js stand-in: records every query Drizzle sends and answers with the queued rows or error (default: no rows)
 export function fakeDb(results: (unknown[] | Error)[] = []): { db: DbClient; calls: Call[] } {
   const calls: Call[] = [];
   const queue = [...results];

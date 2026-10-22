@@ -26,9 +26,7 @@ import { OPERATORS, type Operator } from './types';
 type Clause = Record<string, unknown>;
 
 export type WhereContext = {
-  // relation key → joined table, for relations joined in this call
   joined: ReadonlyMap<string, PgTable>;
-  // every declared relation key, joined or not
   declared: ReadonlySet<string>;
 };
 
@@ -45,7 +43,6 @@ function isScalar(value: unknown): boolean {
   return ['string', 'number', 'boolean', 'bigint'].includes(typeof value) || value instanceof Date;
 }
 
-// Turns a filter object into SQL. Fails loudly: a filter is never silently dropped.
 export function getWhere(table: PgTable, where: unknown, ctx: WhereContext = NO_RELATIONS): SQL {
   if (Array.isArray(where)) {
     if (where.length === 0) throw new QueryBuilderError('Empty OR filter');

@@ -1,6 +1,5 @@
 name: CI
 
-# Pull requests only. Nothing re-runs after merge; releases have their own gate job.
 on:
   pull_request:
     branches: [main]
@@ -35,7 +34,6 @@ jobs:
         run: bunx playwright install --with-deps chromium
       - run: bunx turbo run test:stories
 
-  # Migrations and integration tests on a throwaway copy of production's database
   db:
     name: Database (Neon branch)
     runs-on: ubuntu-latest
@@ -48,7 +46,6 @@ jobs:
       - name: Schema and migrations agree
         working-directory: packages/db
         run: bun run db:check
-      # The branch is deleted at the end of the job; the expiry is a backstop if that step never runs
       - name: Branch expiry
         id: expiry
         run: echo "at=$(date -u -d '+2 hours' +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"

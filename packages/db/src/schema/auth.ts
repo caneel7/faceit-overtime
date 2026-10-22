@@ -24,9 +24,7 @@ export const userTwoFactors = pgTable(
       .notNull()
       .default('totp'),
     secretEncrypted: text('secret_encrypted').notNull(),
-    // TOTP time-step of the last accepted code; older or equal steps are rejected (no replay)
     lastUsedStep: bigint('last_used_step', { mode: 'number' }),
-    // null until the first code confirms the enrolment
     enabledAt: timestamptz('enabled_at'),
   },
   (t) => [

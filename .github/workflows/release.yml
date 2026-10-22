@@ -1,11 +1,5 @@
 name: Release
 
-# The only path to production: publishing a GitHub Release (tag vX.Y.Z) deploys that tag.
-# Split into jobs so "Re-run failed jobs" only repeats what failed:
-#   gate ─▶ migrate ─▶ deploy-api ─┐
-#   build-web ─────────────────────┴─▶ deploy-web ─▶ smoke
-# Migrations run before the api deploys, so they must be expand-only: the previous api
-# keeps serving on the new schema until deploy-api finishes.
 on:
   release:
     types: [published]
@@ -89,7 +83,6 @@ jobs:
         working-directory: apps/api
         run: bunx wrangler deploy --env production --var "VERSION:$VERSION"
 
-  # Runs after the api: web's service binding points at it
   deploy-web:
     name: Deploy web
     needs: [gate, build-web, deploy-api]

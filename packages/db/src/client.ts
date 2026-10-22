@@ -28,23 +28,18 @@ export interface Scope<TT extends PgTable, ScopeCol extends string = never> {
 
 export interface DbClient {
   readonly global: Scope<GlobalTable>;
-  // user-owned tables, filtered by user_id; joins may also read global tables
   forUser(userId: string): Scope<UserTable | GlobalTable, 'userId'>;
-  // the callback's client runs every query inside the transaction (same connection)
   transaction<R>(fn: (tx: DbClient) => Promise<R>): Promise<R>;
-  // `select 1`; rejects on failure or after pingTimeoutMs (health checks must answer fast)
   ping(): Promise<void>;
   close(): Promise<void>;
 }
 
 export type DbClientOptions = {
-  // long enough for a Neon compute to wake from scale-to-zero
   connectTimeoutMs?: number;
   pingTimeoutMs?: number;
   max?: number;
 };
 
-// The Drizzle instance behind each client, for @overtime/db/unscoped only
 export const executors = new WeakMap<DbClient, Executor>();
 
 function scope<TT extends PgTable, ScopeCol extends string = never>(

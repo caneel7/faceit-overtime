@@ -9,7 +9,6 @@ import tseslint from 'typescript-eslint';
 
 const WEB = 'apps/web/**/*.{js,jsx,mjs,ts,tsx}';
 
-// Server-only code that must never reach the browser bundle (see @overtime/shared "./hono")
 const serverOnlyForClients = {
   paths: [
     {
@@ -26,7 +25,6 @@ const serverOnlyForClients = {
   ],
   patterns: [
     {
-      // everything from hono except "hono/client", plus hono-openapi and @hono/*
       regex: '^(hono(/(?!client$).*)?|hono-openapi(/.*)?|@hono/.*)$',
       message: 'Hono server code stays in apps/api. Use "hono/client" for the typed client.',
     },
@@ -55,14 +53,11 @@ export default defineConfig([
     },
   },
 
-  // Next.js rules (react, hooks, a11y, @next/next) for the web app only.
-  // next/typescript is skipped: typescript-eslint is already configured above.
   ...nextVitals
     .filter((config) => config.name !== 'next/typescript' && !config.ignores)
     .map((config) => ({ ...config, files: [WEB] })),
   {
     files: [WEB],
-    // eslint-config-next swaps in its own parser; typescript-eslint rules need theirs
     languageOptions: { parser: tseslint.parser },
     settings: { next: { rootDir: fileURLToPath(new URL('./apps/web', import.meta.url)) } },
   },
@@ -73,7 +68,6 @@ export default defineConfig([
   },
   storybook.configs['flat/recommended'],
 
-  // The isomorphic shared entry must not import Hono or the "./hono" folder
   {
     files: ['packages/shared/src/**/*.ts'],
     ignores: ['packages/shared/src/hono/**'],
@@ -101,7 +95,6 @@ export default defineConfig([
     rules: { 'no-restricted-imports': ['error', serverOnlyForClients] },
   },
 
-  // db is server-only: it may use AppError from @overtime/shared/hono, but not Hono itself or the api
   {
     files: ['packages/db/**/*.ts'],
     rules: {
@@ -121,7 +114,6 @@ export default defineConfig([
     },
   },
 
-  // Raw, unscoped database access: packages/db internals, scripts and test setup only
   {
     files: ['apps/api/src/**/*.ts'],
     rules: {
@@ -140,7 +132,6 @@ export default defineConfig([
     },
   },
 
-  // The engine is pure: no imports from outside the package (tests may use vitest)
   {
     files: ['packages/engine/src/**/*.ts'],
     ignores: ['**/*.test.ts'],
@@ -152,7 +143,6 @@ export default defineConfig([
     },
   },
 
-  // Handlers return JSON through respond() so every response is checked against its schema
   {
     files: ['apps/api/src/features/**/*.ts'],
     ignores: ['**/*.test.ts'],
@@ -165,5 +155,10 @@ export default defineConfig([
         },
       ],
     },
+  },
+
+  {
+    files: ['packages/db/test/types.test.ts'],
+    rules: { '@typescript-eslint/ban-ts-comment': ['error', { 'ts-expect-error': false }] },
   },
 ]);

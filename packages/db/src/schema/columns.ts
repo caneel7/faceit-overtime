@@ -7,7 +7,6 @@ export const citext = customType<{ data: string }>({
 
 export const timestamptz = (name: string) => timestamp(name, { withTimezone: true });
 
-// Every table has these four. A function, so each table gets its own column builders.
 export const baseColumns = () => ({
   id: uuid('id')
     .primaryKey()
@@ -20,5 +19,4 @@ export const baseColumns = () => ({
   deletedAt: timestamptz('deleted_at'),
 });
 
-// Partial index/unique condition: business keys only apply to live rows
 export const live = sql`deleted_at is null`;

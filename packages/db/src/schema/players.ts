@@ -2,7 +2,6 @@ import { sql } from 'drizzle-orm';
 import { check, integer, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core';
 import { baseColumns, citext, live, timestamptz } from './columns';
 
-// A FACEIT identity. Exists without an Overtime user when a captain adds someone by nickname.
 export const players = pgTable(
   'players',
   {

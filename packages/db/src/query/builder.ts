@@ -34,13 +34,10 @@ import type {
 } from './types';
 import { getWhere, type WhereContext } from './where';
 
-// The Drizzle database or a transaction: both build and run queries the same way
 export type Executor = PgDatabase<PgQueryResultHKT, Record<string, never>>;
 
 export type ScopeConfig = {
-  // tables this scope may query (as the main table or a joined one)
   tables: ReadonlySet<PgTable>;
-  // forUser: rows of these tables are filtered by column = value, on the main table and in joins
   owner?: { column: string; value: string; tables: ReadonlySet<PgTable> };
 };
 
@@ -94,9 +91,6 @@ export class QueryBuilder<
     }
   }
 
-  // ---- conditions every query gets ----
-
-  // forUser: `user_id = $userId` when the table is user-owned
   #ownerCondition(table: PgTable): SQL | undefined {
     const owner = this.scope.owner;
     if (!owner || !owner.tables.has(table)) return undefined;

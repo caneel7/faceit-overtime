@@ -1,4 +1,3 @@
-// Compile-time guarantees. `tsc` (the typecheck task) fails if any @ts-expect-error line stops being an error.
 import { expectTypeOf, it } from 'vitest';
 import type { DbClient } from '../src/client';
 import type { Relations, Row } from '../src/query/types';
@@ -14,17 +13,17 @@ export async function filters(db: DbClient) {
   await qb.find({ where: { nickname: 's1mple', 'cs2Level >=': 8, 'cs2Region IN': ['EU'] } });
   await qb.find({ where: [{ country: 'UA' }, { 'avatarUrl ISNULL': true }] });
 
-  // @ts-expect-error misspelled column
+  // @ts-expect-error
   await qb.find({ where: { nicknme: 'x' } });
-  // @ts-expect-error unknown operator
+  // @ts-expect-error
   await qb.find({ where: { 'cs2Level ~': 1 } });
-  // @ts-expect-error wrong value type for the column
+  // @ts-expect-error
   await qb.find({ where: { 'cs2Level >': 'high' } });
-  // @ts-expect-error LIKE needs a string
+  // @ts-expect-error
   await qb.find({ where: { 'nickname ILIKE': 5 } });
-  // @ts-expect-error BETWEEN needs exactly two values
+  // @ts-expect-error
   await qb.find({ where: { 'cs2Elo BETWEEN': [1, 2, 3] } });
-  // @ts-expect-error orderBy on an unknown column
+  // @ts-expect-error
   await qb.find({ orderBy: { elo: 'desc' } });
 }
 
@@ -44,24 +43,23 @@ export async function relations(db: DbClient) {
   const plain = await qb.find();
   expectTypeOf(plain[0]!).toEqualTypeOf<Row<typeof teams>>();
 
-  // @ts-expect-error relation filter on a column the related table doesn't have
+  // @ts-expect-error
   await qb.find({ relations: { captain: 'left' }, where: { captain: { nickname: 'x' } } });
-  // @ts-expect-error undeclared relation
+  // @ts-expect-error
   await qb.find({ relations: { coach: 'left' } });
 
-  // A widened relations object (e.g. annotated as Record<string, …>) loses its keys, so filtering on it doesn't compile
   const widened: Relations<typeof teams, typeof users> = captain;
-  // @ts-expect-error relation keys are gone
+  // @ts-expect-error
   await db.global.for(teams, widened).find({ where: { captain: { faceitVerified: true } } });
 }
 
 export async function scopes(db: DbClient) {
-  // @ts-expect-error user-owned table through the global scope
+  // @ts-expect-error
   db.global.for(userSessions);
   const toSessions = {
     s: { schema: userSessions, field: users.id, reference: userSessions.userId },
   };
-  // @ts-expect-error relation from a global table to a user-owned one
+  // @ts-expect-error
   db.global.for(users, toSessions);
 
   const sessions = db.forUser('u1').for(userSessions);
@@ -71,13 +69,13 @@ export async function scopes(db: DbClient) {
     expiresAt: new Date(),
   };
   await sessions.insert(session);
-  // @ts-expect-error userId comes from the scope
+  // @ts-expect-error
   await sessions.insert({ ...session, userId: 'u2' });
-  // @ts-expect-error system columns are never inputs
+  // @ts-expect-error
   await sessions.insert({ ...session, id: 'x' });
-  // @ts-expect-error unknown auth method
+  // @ts-expect-error
   await sessions.insert({ refreshTokenHash: 'h', authMethods: ['sms'], expiresAt: new Date() });
-  // @ts-expect-error deletedAt goes through softDelete
+  // @ts-expect-error
   await sessions.update('s1', { deletedAt: new Date() });
 
   await db.forUser('u1').for(trustedDevices).update('d1', { label: 'Phone' });
@@ -87,9 +85,9 @@ export async function writes(db: DbClient) {
   const qb = db.global.for(teams);
   await qb.insert({ name: 'NAVI', tag: 'NAVI', captainUserId: 'u1', createdBy: 'u1' });
   await qb.update('t1', { captainUserId: 'u2' });
-  // @ts-expect-error createdBy never changes
+  // @ts-expect-error
   await qb.update('t1', { createdBy: 'u2' });
-  // @ts-expect-error createdBy is required on insert
+  // @ts-expect-error
   await qb.insert({ name: 'NAVI', tag: 'NAVI', captainUserId: 'u1' });
 }
 

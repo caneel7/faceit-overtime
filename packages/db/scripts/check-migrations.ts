@@ -1,5 +1,3 @@
-// Fails when the Drizzle schema has changes that aren't in a migration yet.
-// `drizzle-kit generate` writes nothing if the schema matches the latest snapshot.
 import { spawnSync } from 'node:child_process';
 
 const run = (cmd: string, args: string[]) =>

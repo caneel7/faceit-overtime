@@ -20,7 +20,6 @@ const STATUS_BY_CODE: Record<ErrorCode, number> = {
   SERVICE_UNAVAILABLE: 503,
 };
 
-// Several codes can share a status (e.g. two kinds of 409), so group them under one entry
 export function errorResponses(...codes: ErrorCode[]) {
   const byStatus = new Map<number, ErrorCode[]>();
   for (const code of codes) {

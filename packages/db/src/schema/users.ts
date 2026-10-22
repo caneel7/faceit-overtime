@@ -9,7 +9,6 @@ export const users = pgTable(
     playerId: uuid('player_id')
       .notNull()
       .references(() => players.id),
-    // false only for the nickname-link fallback (FR-AUTH-3)
     faceitVerified: boolean('faceit_verified').notNull().default(true),
   },
   (t) => [uniqueIndex('users_player_id_key').on(t.playerId).where(live)],

@@ -1,6 +1,5 @@
 import { AppError } from '@overtime/shared/hono';
 
-// A malformed filter or call: a bug in our code, so it surfaces as a 500
 export class QueryBuilderError extends Error {
   constructor(message: string) {
     super(message);
@@ -8,7 +7,6 @@ export class QueryBuilderError extends Error {
   }
 }
 
-// "Doesn't exist", "deleted" and "not yours" all look the same to the caller
 export class NotFoundError extends AppError {
   constructor(message = 'Not found') {
     super('NOT_FOUND', 404, message);
@@ -28,7 +26,6 @@ export class ConflictError extends AppError {
 
 type PgErrorLike = { code?: unknown; constraint_name?: unknown; cause?: unknown };
 
-// postgres.js raises PostgresError; Drizzle wraps it in DrizzleQueryError with the original as `cause`
 export function toConflictError(err: unknown): ConflictError | undefined {
   for (
     let e = err as PgErrorLike | undefined;

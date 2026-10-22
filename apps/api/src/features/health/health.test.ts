@@ -40,7 +40,6 @@ describe('GET /api/health', () => {
           details: { db: 'down' },
         },
       });
-      // the cause is logged, never returned
       expect(log).toHaveBeenCalledWith(expect.stringContaining('"cause"'));
       log.mockRestore();
     },

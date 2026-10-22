@@ -1,6 +1,5 @@
 import type { Bindings } from '../src/env';
 
-// Nothing listens on port 1: connecting is refused at once, which is how "database down" looks
 export const UNREACHABLE_DB = 'postgres://overtime:overtime@127.0.0.1:1/overtime';
 
 export function testEnv(
@@ -16,7 +15,6 @@ export function testEnv(
   };
 }
 
-// Collects waitUntil() work (closing the db client) so tests can wait for it
 export function testCtx() {
   const pending: Promise<unknown>[] = [];
   const ctx = {
