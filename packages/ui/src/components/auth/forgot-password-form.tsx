@@ -1,6 +1,6 @@
 'use client';
 
-import { EmailBody } from '@overtime/shared';
+import { ForgotPasswordRequest } from '@overtime/shared';
 import { useState, type FormEvent } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Button } from '../ui/button';
@@ -28,7 +28,7 @@ export function ForgotPasswordForm({
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const parsed = EmailBody.safeParse({
+    const parsed = ForgotPasswordRequest.safeParse({
       email: String(new FormData(event.currentTarget).get('email') ?? ''),
     });
     if (!parsed.success) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { Email, SignUpBody } from '@overtime/shared';
+import { Email, RegisterRequest } from '@overtime/shared';
 import { useState, type FocusEvent, type FormEvent } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Button } from '../ui/button';
@@ -43,7 +43,7 @@ export function SignUpForm({
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    const parsed = SignUpBody.safeParse({
+    const parsed = RegisterRequest.safeParse({
       displayName: String(data.get('displayName') ?? ''),
       email: String(data.get('email') ?? ''),
       password: String(data.get('password') ?? ''),

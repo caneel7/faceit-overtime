@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { DisplayName, Email, EmailAvailable, Me, OpaqueToken, Password, SignUpBody } from '../src';
+import {
+  DisplayName,
+  Email,
+  EmailAvailabilityResponse,
+  LoginResponse,
+  MeResponse,
+  OpaqueToken,
+  Password,
+  RegisterRequest,
+  RegisterResponse,
+} from '../src';
 
 describe('Email', () => {
   it('trims surrounding whitespace', () => {
@@ -46,9 +56,9 @@ describe('OpaqueToken', () => {
   });
 });
 
-describe('SignUpBody', () => {
+describe('RegisterRequest', () => {
   it('reports every invalid field at once', () => {
-    const result = SignUpBody.safeParse({ email: 'x', password: 'short', displayName: '' });
+    const result = RegisterRequest.safeParse({ email: 'x', password: 'short', displayName: '' });
     expect(result.success).toBe(false);
     expect(result.error?.issues.map((i) => i.path[0]).sort()).toEqual([
       'displayName',
@@ -58,14 +68,21 @@ describe('SignUpBody', () => {
   });
 });
 
-describe('EmailAvailable', () => {
+describe('EmailAvailabilityResponse', () => {
   it('is a boolean answer only', () => {
-    expect(EmailAvailable.parse({ available: false })).toEqual({ available: false });
-    expect(EmailAvailable.safeParse({ available: 'no' }).success).toBe(false);
+    expect(EmailAvailabilityResponse.parse({ available: false })).toEqual({ available: false });
+    expect(EmailAvailabilityResponse.safeParse({ available: 'no' }).success).toBe(false);
   });
 });
 
-describe('Me', () => {
+describe('responses', () => {
+  it('register answers accepted only; login answers the signed-in user', () => {
+    expect(RegisterResponse.parse({ status: 'accepted' })).toEqual({ status: 'accepted' });
+    expect(LoginResponse).toBe(MeResponse);
+  });
+});
+
+describe('MeResponse', () => {
   const base = {
     user: {
       id: '0199f1e2-7c3a-7000-8000-000000000001',
@@ -80,7 +97,7 @@ describe('Me', () => {
   };
 
   it('accepts an email account without FACEIT', () => {
-    expect(Me.safeParse(base).success).toBe(true);
+    expect(MeResponse.safeParse(base).success).toBe(true);
   });
 
   it('accepts a FACEIT account with a player and no email', () => {
@@ -107,7 +124,7 @@ describe('Me', () => {
         syncedAt: '2026-10-24T10:00:00.000Z',
       },
     };
-    expect(Me.safeParse(faceitOnly).success).toBe(true);
+    expect(MeResponse.safeParse(faceitOnly).success).toBe(true);
   });
 
   it('rejects an unknown identity provider', () => {
@@ -115,6 +132,6 @@ describe('Me', () => {
       ...base,
       identities: [{ provider: 'steam', providerUserId: '1', linkedAt: base.user.createdAt }],
     };
-    expect(Me.safeParse(steam).success).toBe(false);
+    expect(MeResponse.safeParse(steam).success).toBe(false);
   });
 });

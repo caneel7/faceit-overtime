@@ -1,6 +1,6 @@
 'use client';
 
-import { SignInBody } from '@overtime/shared';
+import { LoginRequest } from '@overtime/shared';
 import { useState, type FormEvent } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Button } from '../ui/button';
@@ -35,7 +35,7 @@ export function SignInForm({
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    const parsed = SignInBody.safeParse({
+    const parsed = LoginRequest.safeParse({
       email: String(data.get('email') ?? ''),
       password: String(data.get('password') ?? ''),
     });
