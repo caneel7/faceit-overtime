@@ -14,7 +14,7 @@
   },
   // Local dev connects to the Neon dev branch: set CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE
   // in apps/api/.env (gitignored). The connection string is never committed.
-  "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "57f8cee1ffbf417db53774e2d3d3ced3" }],
+  "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "3987155b86df403695621cc4d1bb2d11" }],
   "env": {
     // Deployed by the release workflow: wrangler deploy --env production
     "production": {
@@ -27,7 +27,7 @@
         "APP_URL": "https://overtime.caneel.dev",
         "VERSION": "dev",
       },
-      "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "57f8cee1ffbf417db53774e2d3d3ced3" }],
+      "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "3987155b86df403695621cc4d1bb2d11" }],
     },
   },
 }
