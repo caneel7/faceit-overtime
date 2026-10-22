@@ -3,7 +3,6 @@ import { playwright } from '@vitest/browser-playwright';
 import { defineConfig, mergeConfig } from 'vitest/config';
 import viteConfig from './vite.config';
 
-// Every story becomes a test: it must render, pass its play function, and have no a11y violations
 export default mergeConfig(
   viteConfig,
   defineConfig({

@@ -1,9 +1,7 @@
 @import 'tailwindcss';
 
-/* Scan this package's components even when the CSS is imported from another workspace */
 @source '.';
 
-/* Dark theme only, one accent (ARCH D9) */
 :root {
   color-scheme: dark;
   --radius: 0.625rem;

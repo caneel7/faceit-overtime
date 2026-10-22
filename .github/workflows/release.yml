@@ -1,9 +1,5 @@
 name: Release
 
-# The only path to production: publishing a GitHub Release (tag vX.Y.Z) deploys that tag.
-# Split into jobs so "Re-run failed jobs" only repeats what failed:
-#   gate ─────────┬─▶ deploy-api ─┐
-#   build-web ────┴───────────────┴─▶ deploy-web ─▶ purge-cache ─▶ smoke
 on:
   release:
     types: [published]
@@ -50,9 +46,26 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  migrate:
+    name: Migrate database
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.VERSION }}
+      - uses: ./.github/actions/setup
+      - name: drizzle-kit migrate (Neon production branch, direct connection)
+        working-directory: packages/db
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: bun run db:migrate
+
   deploy-api:
     name: Deploy api
-    needs: gate
+    needs: [gate, migrate]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment:
@@ -70,7 +83,6 @@ jobs:
         working-directory: apps/api
         run: bunx wrangler deploy --env production --var "VERSION:$VERSION"
 
-  # Runs after the api: web's service binding points at it
   deploy-web:
     name: Deploy web
     needs: [gate, build-web, deploy-api]
@@ -126,19 +138,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Both hosts report the release version
+      - name: Both hosts report the release version and a working database
         run: |
           for url in https://overtime-api.caneel.dev/api/health https://overtime.caneel.dev/api/health; do
             for attempt in 1 2 3 4 5; do
-              got=$(curl -fsS "$url" | jq -r .version || true)
-              if [ "$got" = "$VERSION" ]; then
+              got=$(curl -fsS "$url" | jq -r '"\(.version) \(.db)"' || true)
+              if [ "$got" = "$VERSION ok" ]; then
                 echo "$url -> $got"
                 continue 2
               fi
               echo "$url returned '$got' (attempt $attempt), retrying"
               sleep 5
             done
-            echo "::error::$url did not report $VERSION"
+            echo "::error::$url did not report version $VERSION with db ok"
             exit 1
           done
       - name: API docs load

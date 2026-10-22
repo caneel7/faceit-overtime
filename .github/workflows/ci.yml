@@ -1,6 +1,5 @@
 name: CI
 
-# Pull requests only. Nothing re-runs after merge; releases have their own gate job.
 on:
   pull_request:
     branches: [main]
@@ -34,3 +33,44 @@ jobs:
         working-directory: packages/ui
         run: bunx playwright install --with-deps chromium
       - run: bunx turbo run test:stories
+
+  db:
+    name: Database (Neon branch)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      REQUIRE_DATABASE: '1'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - name: Schema and migrations agree
+        working-directory: packages/db
+        run: bun run db:check
+      - name: Branch expiry
+        id: expiry
+        run: echo "at=$(date -u -d '+2 hours' +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+      - name: Create Neon branch from production
+        id: neon
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ secrets.NEON_PROJECT_ID }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          parent_branch: production
+          branch_name: ci-pr-${{ github.event.number }}-${{ github.run_id }}-${{ github.run_attempt }}
+          expires_at: ${{ steps.expiry.outputs.at }}
+      - name: Migrate
+        working-directory: packages/db
+        env:
+          DATABASE_URL: ${{ steps.neon.outputs.db_url }}
+        run: bun run db:migrate
+      - name: Integration tests
+        env:
+          DATABASE_URL: ${{ steps.neon.outputs.db_url }}
+        run: bunx turbo run test --filter=@overtime/db --filter=@overtime/api
+      - name: Delete Neon branch
+        if: always() && steps.neon.outputs.branch_id != ''
+        uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ secrets.NEON_PROJECT_ID }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          branch: ${{ steps.neon.outputs.branch_id }}

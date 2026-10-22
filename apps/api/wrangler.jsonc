@@ -1,6 +1,5 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  // Top level = local development (`wrangler dev`). Production lives in env.production.
   "name": "overtime-api",
   "main": "src/index.ts",
   "compatibility_date": "2026-10-01",
@@ -12,18 +11,17 @@
     "APP_URL": "http://localhost:3000",
     "VERSION": "dev",
   },
+  "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "3987155b86df403695621cc4d1bb2d11" }],
   "env": {
-    // Deployed by the release workflow: wrangler deploy --env production
     "production": {
-      // Explicit, otherwise wrangler names the Worker "overtime-api-production"
       "name": "overtime-api",
       "routes": [{ "pattern": "overtime-api.caneel.dev", "custom_domain": true }],
-      // vars are not inherited from the top level; VERSION is replaced with the release tag
       "vars": {
         "ENVIRONMENT": "production",
         "APP_URL": "https://overtime.caneel.dev",
         "VERSION": "dev",
       },
+      "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "3987155b86df403695621cc4d1bb2d11" }],
     },
   },
 }

@@ -9,7 +9,6 @@ import tseslint from 'typescript-eslint';
 
 const WEB = 'apps/web/**/*.{js,jsx,mjs,ts,tsx}';
 
-// Server-only code that must never reach the browser bundle (see @overtime/shared "./hono")
 const serverOnlyForClients = {
   paths: [
     {
@@ -21,10 +20,11 @@ const serverOnlyForClients = {
       allowTypeImports: true,
       message: 'Only `import type` from the api (e.g. AppType).',
     },
+    { name: '@overtime/db', message: 'Database access stays in apps/api.' },
+    { name: '@overtime/db/unscoped', message: 'Database access stays in apps/api.' },
   ],
   patterns: [
     {
-      // everything from hono except "hono/client", plus hono-openapi and @hono/*
       regex: '^(hono(/(?!client$).*)?|hono-openapi(/.*)?|@hono/.*)$',
       message: 'Hono server code stays in apps/api. Use "hono/client" for the typed client.',
     },
@@ -53,14 +53,11 @@ export default defineConfig([
     },
   },
 
-  // Next.js rules (react, hooks, a11y, @next/next) for the web app only.
-  // next/typescript is skipped: typescript-eslint is already configured above.
   ...nextVitals
     .filter((config) => config.name !== 'next/typescript' && !config.ignores)
     .map((config) => ({ ...config, files: [WEB] })),
   {
     files: [WEB],
-    // eslint-config-next swaps in its own parser; typescript-eslint rules need theirs
     languageOptions: { parser: tseslint.parser },
     settings: { next: { rootDir: fileURLToPath(new URL('./apps/web', import.meta.url)) } },
   },
@@ -71,7 +68,6 @@ export default defineConfig([
   },
   storybook.configs['flat/recommended'],
 
-  // The isomorphic shared entry must not import Hono or the "./hono" folder
   {
     files: ['packages/shared/src/**/*.ts'],
     ignores: ['packages/shared/src/hono/**'],
@@ -95,11 +91,47 @@ export default defineConfig([
   },
 
   {
-    files: ['apps/web/**/*.{ts,tsx}', 'packages/ui/**/*.{ts,tsx}', 'packages/db/**/*.ts'],
+    files: ['apps/web/**/*.{ts,tsx}', 'packages/ui/**/*.{ts,tsx}'],
     rules: { 'no-restricted-imports': ['error', serverOnlyForClients] },
   },
 
-  // The engine is pure: no imports from outside the package (tests may use vitest)
+  {
+    files: ['packages/db/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [{ name: '@overtime/api', message: 'packages/db must not depend on the api.' }],
+          patterns: [
+            {
+              regex: '^(hono(/.*)?|hono-openapi(/.*)?|@hono/.*)$',
+              message:
+                'packages/db must not use Hono directly. Use AppError from @overtime/shared/hono.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  {
+    files: ['apps/api/src/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@overtime/db/unscoped',
+              message:
+                'Use db.global / db.forUser. Unscoped queries belong in packages/db/src/queries.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
   {
     files: ['packages/engine/src/**/*.ts'],
     ignores: ['**/*.test.ts'],
@@ -111,7 +143,6 @@ export default defineConfig([
     },
   },
 
-  // Handlers return JSON through respond() so every response is checked against its schema
   {
     files: ['apps/api/src/features/**/*.ts'],
     ignores: ['**/*.test.ts'],
@@ -124,5 +155,10 @@ export default defineConfig([
         },
       ],
     },
+  },
+
+  {
+    files: ['packages/db/test/types.test.ts'],
+    rules: { '@typescript-eslint/ban-ts-comment': ['error', { 'ts-expect-error': false }] },
   },
 ]);
