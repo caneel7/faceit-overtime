@@ -11,6 +11,7 @@ export type Bindings = {
   MAILER: 'resend' | 'zeptomail';
   ZEPTOMAIL_URL: string;
   HYPERDRIVE: { connectionString: string };
+  DB_PING_TIMEOUT_MS?: string;
   AUTH_QUEUE: { send(body: unknown): Promise<void> };
   SIGNIN_LIMITER: RateLimiter;
   IP_LIMITER: RateLimiter;
