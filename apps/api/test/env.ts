@@ -11,8 +11,11 @@ export function testEnv(
     APP_URL: 'http://localhost:3000',
     VERSION: 'v0.0.0-test',
     HYPERDRIVE: { connectionString },
+    JWT_SIGNING_KEY: '',
+    PII_ENCRYPTION_KEY: '',
+    PII_HMAC_KEY: '',
     ...overrides,
-  };
+  } as Bindings;
 }
 
 export function testCtx() {

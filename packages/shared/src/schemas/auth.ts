@@ -43,6 +43,12 @@ export const MeResponse = z.object({
 });
 export type MeResponse = z.infer<typeof MeResponse>;
 
+export const SessionResponse = MeResponse.extend({
+  accessToken: z.string(),
+  expiresAt: IsoDateTime,
+});
+export type SessionResponse = z.infer<typeof SessionResponse>;
+
 const Accepted = z.object({ status: z.literal('accepted') });
 
 export const RegisterRequest = z.object({
@@ -64,7 +70,7 @@ export type EmailAvailabilityResponse = z.infer<typeof EmailAvailabilityResponse
 export const VerifyEmailRequest = z.object({ token: OpaqueToken });
 export type VerifyEmailRequest = z.infer<typeof VerifyEmailRequest>;
 
-export const VerifyEmailResponse = MeResponse;
+export const VerifyEmailResponse = SessionResponse;
 export type VerifyEmailResponse = z.infer<typeof VerifyEmailResponse>;
 
 export const ResendVerificationRequest = z.object({ email: Email });
@@ -76,7 +82,7 @@ export type ResendVerificationResponse = z.infer<typeof ResendVerificationRespon
 export const LoginRequest = z.object({ email: Email, password: z.string().min(1).max(128) });
 export type LoginRequest = z.infer<typeof LoginRequest>;
 
-export const LoginResponse = MeResponse;
+export const LoginResponse = SessionResponse;
 export type LoginResponse = z.infer<typeof LoginResponse>;
 
 export const ForgotPasswordRequest = z.object({ email: Email });
@@ -88,11 +94,17 @@ export type ForgotPasswordResponse = z.infer<typeof ForgotPasswordResponse>;
 export const ResetPasswordRequest = z.object({ token: OpaqueToken, password: Password });
 export type ResetPasswordRequest = z.infer<typeof ResetPasswordRequest>;
 
-export const ResetPasswordResponse = MeResponse;
+export const ResetPasswordResponse = SessionResponse;
 export type ResetPasswordResponse = z.infer<typeof ResetPasswordResponse>;
 
 export const DevLoginRequest = z.object({ nickname: z.string().trim().min(1).max(64) });
 export type DevLoginRequest = z.infer<typeof DevLoginRequest>;
 
-export const DevLoginResponse = MeResponse;
+export const DevLoginResponse = SessionResponse;
 export type DevLoginResponse = z.infer<typeof DevLoginResponse>;
+
+export const RefreshResponse = SessionResponse;
+export type RefreshResponse = z.infer<typeof RefreshResponse>;
+
+export const FaceitLinkResponse = z.object({ url: z.url() });
+export type FaceitLinkResponse = z.infer<typeof FaceitLinkResponse>;

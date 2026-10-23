@@ -29,7 +29,12 @@ describe('OpenAPI', () => {
         },
       },
     });
-    expect(Object.keys(spec.paths)).toEqual(['/api/health']);
+    expect(Object.keys(spec.paths).sort()).toEqual([
+      '/api/auth/logout',
+      '/api/auth/refresh',
+      '/api/health',
+      '/api/me',
+    ]);
   });
 
   it('serves the API reference page', async () => {

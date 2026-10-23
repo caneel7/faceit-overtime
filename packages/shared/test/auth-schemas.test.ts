@@ -5,6 +5,8 @@ import {
   EmailAvailabilityResponse,
   LoginResponse,
   MeResponse,
+  RefreshResponse,
+  SessionResponse,
   OpaqueToken,
   Password,
   RegisterRequest,
@@ -76,9 +78,15 @@ describe('EmailAvailabilityResponse', () => {
 });
 
 describe('responses', () => {
-  it('register answers accepted only; login answers the signed-in user', () => {
+  it('register answers accepted only; login and refresh answer the token plus the user', () => {
     expect(RegisterResponse.parse({ status: 'accepted' })).toEqual({ status: 'accepted' });
-    expect(LoginResponse).toBe(MeResponse);
+    expect(LoginResponse).toBe(SessionResponse);
+    expect(RefreshResponse).toBe(SessionResponse);
+    expect(Object.keys(SessionResponse.shape)).toEqual([
+      ...Object.keys(MeResponse.shape),
+      'accessToken',
+      'expiresAt',
+    ]);
   });
 });
 

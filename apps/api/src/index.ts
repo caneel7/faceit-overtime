@@ -5,9 +5,19 @@ import { openAPIRouteHandler } from 'hono-openapi';
 import pkg from '../package.json';
 import { dbMiddleware } from './db';
 import type { AppEnv } from './env';
+import { auth } from './features/auth/routes';
 import { health } from './features/health/routes';
+import { me } from './features/me/routes';
+import { publicJwks } from './lib/jwt';
+import { authenticate } from './middleware/auth';
 
-const api = new Hono<AppEnv>().basePath('/api').use(dbMiddleware).route('/health', health);
+const api = new Hono<AppEnv>()
+  .basePath('/api')
+  .use(dbMiddleware)
+  .use(authenticate)
+  .route('/health', health)
+  .route('/auth', auth)
+  .route('/me', me);
 
 const app = new Hono<AppEnv>()
   .get('/', (c) => c.redirect('/docs', 302))
@@ -21,10 +31,17 @@ const app = new Hono<AppEnv>()
           description:
             'Swiss-format CS2 tournament platform. Unofficial — uses the FACEIT Data API.',
         },
+        components: {
+          securitySchemes: { bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' } },
+        },
       },
     }),
   )
   .get('/docs', Scalar({ url: '/openapi.json', pageTitle: 'Overtime API' }))
+  .get('/.well-known/jwks.json', async (c) => {
+    c.header('Cache-Control', 'public, max-age=300');
+    return c.json(await publicJwks(c.env.JWT_SIGNING_KEY));
+  })
   .route('/', api);
 
 app.onError(onError);
