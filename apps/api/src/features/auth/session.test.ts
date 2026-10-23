@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { databaseUrl, integrationEnv, openDb, testUsers } from '../../../test/auth';
 import { testCtx } from '../../../test/env';
 import type { Bindings } from '../../env';
-import app from '../../index';
+import { app } from '../../index';
 
 function setCookies(res: Response): Record<string, string> {
   return Object.fromEntries(

@@ -10,16 +10,19 @@ import { health } from './features/health/routes';
 import { me } from './features/me/routes';
 import { publicJwks } from './lib/jwt';
 import { authenticate } from './middleware/auth';
+import { handleQueueBatch } from './queues/consumers';
+import { queueMiddleware } from './queues/queue-service';
 
 const api = new Hono<AppEnv>()
   .basePath('/api')
   .use(dbMiddleware)
+  .use(queueMiddleware)
   .use(authenticate)
   .route('/health', health)
   .route('/auth', auth)
   .route('/me', me);
 
-const app = new Hono<AppEnv>()
+export const app = new Hono<AppEnv>()
   .get('/', (c) => c.redirect('/docs', 302))
   .get(
     '/openapi.json',
@@ -48,4 +51,8 @@ app.onError(onError);
 app.notFound(notFound);
 
 export type AppType = typeof api;
-export default app;
+
+export default {
+  fetch: app.fetch,
+  queue: handleQueueBatch,
+};

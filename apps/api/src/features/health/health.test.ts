@@ -1,7 +1,7 @@
 import { ErrorBody, HealthResponse } from '@overtime/shared';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { testCtx, testEnv } from '../../../test/env';
-import app from '../../index';
+import { app } from '../../index';
 
 const { ctx, settle } = testCtx();
 afterEach(() => settle());
