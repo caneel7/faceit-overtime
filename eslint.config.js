@@ -170,9 +170,4 @@ export default defineConfig([
     ignores: ['**/*.test.ts'],
     rules: { 'no-restricted-syntax': ['error', NO_RAW_JSON] },
   },
-
-  {
-    files: ['packages/db/test/types.test.ts'],
-    rules: { '@typescript-eslint/ban-ts-comment': ['error', { 'ts-expect-error': false }] },
-  },
 ]);

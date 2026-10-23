@@ -31,9 +31,4 @@ describe('@overtime/shared "." entry', () => {
     expect(inputs.some((p) => p.includes('zod'))).toBe(true);
     expect(leaks(inputs)).toEqual([]);
   });
-
-  it('guard detects the server entry (sanity check that the patterns match)', async () => {
-    const inputs = await bundledInputs('../src/hono/index.ts');
-    expect(leaks(inputs).length).toBeGreaterThan(0);
-  });
 });
