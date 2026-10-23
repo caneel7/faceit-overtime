@@ -20,6 +20,7 @@
     "@scalar/hono-api-reference": "0.12.13",
     "hono": "catalog:",
     "hono-openapi": "catalog:",
+    "jose": "6.2.12",
     "zod": "catalog:"
   },
   "devDependencies": {
