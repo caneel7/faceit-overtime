@@ -33,6 +33,17 @@ export const Default: Story = {
   },
 };
 
+export const ShortPasswordOnBlur: Story = {
+  play: async ({ canvas, userEvent }) => {
+    const password = canvas.getByLabelText('Password');
+    await userEvent.type(password, 'short');
+    await userEvent.tab();
+    await expect(canvas.getByText('Use 10 to 128 characters.')).toBeVisible();
+    await userEvent.type(password, ' and longer');
+    await expect(canvas.queryByText('Use 10 to 128 characters.')).not.toBeInTheDocument();
+  },
+};
+
 export const ShortPassword: Story = {
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.type(canvas.getByLabelText('Display name'), 'Club Admin');

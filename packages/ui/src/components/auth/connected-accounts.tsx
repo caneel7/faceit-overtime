@@ -14,14 +14,16 @@ export type ConnectedPlayer = {
 
 type ConnectedAccountsProps = {
   faceit: { status: 'connected'; player: ConnectedPlayer } | { status: 'not_connected' };
-  connectHref: string;
+  onConnect: () => void;
+  connectPending?: boolean;
   error?: ConnectError;
   justConnected?: boolean;
 };
 
 export function ConnectedAccounts({
   faceit,
-  connectHref,
+  onConnect,
+  connectPending = false,
   error,
   justConnected = false,
 }: ConnectedAccountsProps) {
@@ -57,8 +59,8 @@ export function ConnectedAccounts({
             {faceit.status === 'connected' ? <PlayerIdentity {...faceit.player} size="sm" /> : null}
           </div>
           {faceit.status === 'not_connected' ? (
-            <Button asChild variant="faceit">
-              <a href={connectHref}>Connect with FACEIT</a>
+            <Button type="button" variant="faceit" onClick={onConnect} disabled={connectPending}>
+              {connectPending ? 'Opening FACEIT…' : 'Connect with FACEIT'}
             </Button>
           ) : null}
         </div>

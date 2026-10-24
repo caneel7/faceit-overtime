@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import './globals.css';
+import { SessionProvider } from './session-provider';
+import { SiteHeader } from './site-header';
 
 export const metadata: Metadata = {
   title: 'Overtime',
@@ -11,7 +13,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body className="flex min-h-dvh flex-col antialiased">
-        <div className="flex flex-1 flex-col">{children}</div>
+        <SessionProvider>
+          <SiteHeader />
+          <div className="flex flex-1 flex-col">{children}</div>
+        </SessionProvider>
         <footer className="border-t px-4 py-6 text-center text-xs text-muted-foreground">
           Unofficial — uses the FACEIT Data API.
         </footer>

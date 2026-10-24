@@ -18,7 +18,8 @@
     "hono": "catalog:",
     "next": "16.4.2",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "zustand": "5.0.15"
   },
   "devDependencies": {
     "@overtime/api": "workspace:*",

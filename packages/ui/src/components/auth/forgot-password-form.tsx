@@ -1,13 +1,14 @@
 'use client';
 
 import { ForgotPasswordRequest } from '@overtime/shared';
-import { useState, type FormEvent } from 'react';
+import type { FormEvent } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Button } from '../ui/button';
 import { CheckEmailNotice } from './check-email-notice';
 import { FIELD_MESSAGES } from './field-errors';
 import { FormField } from './form-field';
 import { RATE_LIMITED } from './messages';
+import { useFieldValidation } from './use-field-validation';
 
 type ForgotPasswordFormProps = {
   onSubmit: (values: { email: string }) => void;
@@ -22,7 +23,9 @@ export function ForgotPasswordForm({
   sentTo,
   error,
 }: ForgotPasswordFormProps) {
-  const [emailError, setEmailError] = useState<string>();
+  const { errors, setErrors, field } = useFieldValidation<'email'>({
+    email: { schema: ForgotPasswordRequest.shape.email, message: FIELD_MESSAGES.email },
+  });
 
   if (sentTo) return <CheckEmailNotice email={sentTo} kind="reset" />;
 
@@ -32,10 +35,10 @@ export function ForgotPasswordForm({
       email: String(new FormData(event.currentTarget).get('email') ?? ''),
     });
     if (!parsed.success) {
-      setEmailError(FIELD_MESSAGES.email);
+      setErrors({ email: FIELD_MESSAGES.email });
       return;
     }
-    setEmailError(undefined);
+    setErrors({});
     onSubmit(parsed.data);
   }
 
@@ -53,7 +56,8 @@ export function ForgotPasswordForm({
         type="email"
         label="Email"
         autoComplete="email"
-        error={emailError}
+        {...field('email')}
+        error={errors.email}
         disabled={pending}
       />
       <Button type="submit" className="w-full" disabled={pending}>

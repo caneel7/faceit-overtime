@@ -1,6 +1,6 @@
 import { HealthResponse } from '@overtime/shared';
 import { Button } from '@overtime/ui';
-import { serverApi } from '../lib/api';
+import { serverApi } from '../lib/api-server';
 
 export const dynamic = 'force-dynamic';
 

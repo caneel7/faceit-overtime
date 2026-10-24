@@ -57,18 +57,15 @@ export function UserMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className="gap-2 px-2"
-          aria-label={`Account menu for ${user.displayName}`}
-        >
-          <Avatar className="size-7">
+        <Button variant="ghost" className="gap-2 px-2">
+          <Avatar className="size-7" aria-hidden>
             {user.avatarUrl ? <AvatarImage src={user.avatarUrl} alt="" /> : null}
             <AvatarFallback>{initials(user.displayName)}</AvatarFallback>
           </Avatar>
-          <span className="hidden max-w-32 truncate sm:inline">{user.displayName}</span>
+          <span className="sr-only">Account menu for </span>
+          <span className="sr-only sm:not-sr-only sm:max-w-32 sm:truncate">{user.displayName}</span>
           {user.cs2Level ? (
-            <Badge variant="secondary" className="hidden sm:inline-flex">
+            <Badge variant="secondary" className="hidden sm:inline-flex" aria-hidden>
               Lvl {user.cs2Level}
             </Badge>
           ) : null}

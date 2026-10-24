@@ -1,12 +1,13 @@
 'use client';
 
-import { Email, RegisterRequest } from '@overtime/shared';
-import { useState, type FocusEvent, type FormEvent } from 'react';
+import { RegisterRequest } from '@overtime/shared';
+import type { FormEvent } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Button } from '../ui/button';
 import { FIELD_MESSAGES, fieldErrors, type FieldErrors } from './field-errors';
 import { FormField } from './form-field';
 import { RATE_LIMITED } from './messages';
+import { useFieldValidation } from './use-field-validation';
 
 export type SignUpValues = { email: string; password: string; displayName: string };
 export type EmailStatus = 'unknown' | 'checking' | 'available' | 'taken';
@@ -31,14 +32,13 @@ export function SignUpForm({
   fieldErrors: serverErrors,
   error,
 }: SignUpFormProps) {
-  const [errors, setErrors] = useState<FieldErrors<Field>>({});
+  const { errors, setErrors, field } = useFieldValidation<Field>({
+    displayName: { schema: RegisterRequest.shape.displayName, message: FIELD_MESSAGES.displayName },
+    email: { schema: RegisterRequest.shape.email, message: FIELD_MESSAGES.email },
+    password: { schema: RegisterRequest.shape.password, message: FIELD_MESSAGES.password },
+  });
   const shown = { ...serverErrors, ...errors };
   const taken = emailStatus === 'taken';
-
-  function handleEmailBlur(event: FocusEvent<HTMLInputElement>) {
-    const parsed = Email.safeParse(event.currentTarget.value);
-    if (parsed.success) onEmailBlur?.(parsed.data);
-  }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -76,6 +76,7 @@ export function SignUpForm({
         name="displayName"
         label="Display name"
         autoComplete="nickname"
+        {...field('displayName')}
         hint="Shown to other organisers and players."
         error={shown.displayName}
         disabled={pending}
@@ -86,7 +87,7 @@ export function SignUpForm({
         type="email"
         label="Email"
         autoComplete="email"
-        onBlur={handleEmailBlur}
+        {...field('email', onEmailBlur)}
         hint={emailStatus === 'checking' ? 'Checking…' : undefined}
         error={
           shown.email ??
@@ -107,6 +108,7 @@ export function SignUpForm({
         type="password"
         label="Password"
         autoComplete="new-password"
+        {...field('password')}
         hint="At least 10 characters. A few words work well."
         error={shown.password}
         disabled={pending}

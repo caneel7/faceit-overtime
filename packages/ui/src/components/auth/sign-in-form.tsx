@@ -1,13 +1,14 @@
 'use client';
 
 import { LoginRequest } from '@overtime/shared';
-import { useState, type FormEvent } from 'react';
+import type { FormEvent } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Button } from '../ui/button';
 import { Separator } from '../ui/separator';
-import { FIELD_MESSAGES, fieldErrors, type FieldErrors } from './field-errors';
+import { FIELD_MESSAGES, fieldErrors } from './field-errors';
 import { FormField } from './form-field';
 import { SIGN_IN_ERRORS, type SignInError } from './messages';
+import { useFieldValidation } from './use-field-validation';
 
 export type SignInValues = { email: string; password: string };
 
@@ -30,7 +31,9 @@ export function SignInForm({
   onResendVerification,
   resendPending = false,
 }: SignInFormProps) {
-  const [errors, setErrors] = useState<FieldErrors<'email' | 'password'>>({});
+  const { errors, setErrors, field } = useFieldValidation<'email' | 'password'>({
+    email: { schema: LoginRequest.shape.email, message: FIELD_MESSAGES.email },
+  });
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -89,6 +92,7 @@ export function SignInForm({
           type="email"
           label="Email"
           autoComplete="email"
+          {...field('email')}
           error={errors.email}
           disabled={pending}
         />
@@ -98,6 +102,7 @@ export function SignInForm({
           type="password"
           label="Password"
           autoComplete="current-password"
+          {...field('password')}
           error={errors.password}
           disabled={pending}
         />

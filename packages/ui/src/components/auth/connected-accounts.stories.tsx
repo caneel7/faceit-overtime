@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect } from 'storybook/test';
+import { expect, fn, userEvent } from 'storybook/test';
 import { ConnectedAccounts } from './connected-accounts';
 
 const player = { nickname: 's1mple', cs2Level: 10, country: 'UA' };
@@ -9,7 +9,7 @@ const meta = {
   component: ConnectedAccounts,
   args: {
     faceit: { status: 'not_connected' },
-    connectHref: '/api/auth/faceit/start?intent=link',
+    onConnect: fn(),
   },
   decorators: [
     (Story) => (
@@ -24,11 +24,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const NotConnected: Story = {
-  play: async ({ canvas }) => {
-    await expect(canvas.getByRole('link', { name: 'Connect with FACEIT' })).toHaveAttribute(
-      'href',
-      '/api/auth/faceit/start?intent=link',
-    );
+  play: async ({ args, canvas }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Connect with FACEIT' }));
+    await expect(args.onConnect).toHaveBeenCalledTimes(1);
   },
 };
 
@@ -37,10 +35,12 @@ export const Connected: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByText('Connected')).toBeVisible();
     await expect(
-      canvas.queryByRole('link', { name: 'Connect with FACEIT' }),
+      canvas.queryByRole('button', { name: 'Connect with FACEIT' }),
     ).not.toBeInTheDocument();
   },
 };
+
+export const Connecting: Story = { args: { connectPending: true } };
 
 export const JustConnected: Story = {
   args: { faceit: { status: 'connected', player }, justConnected: true },

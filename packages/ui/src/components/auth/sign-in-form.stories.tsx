@@ -49,6 +49,17 @@ export const EmptySubmit: Story = {
   },
 };
 
+export const InvalidEmailOnBlur: Story = {
+  play: async ({ canvas, userEvent }) => {
+    const email = canvas.getByLabelText('Email');
+    await userEvent.type(email, 'admin@');
+    await userEvent.tab();
+    await expect(canvas.getByText('Enter a valid email address.')).toBeVisible();
+    await userEvent.type(email, 'uni-esports.club');
+    await expect(canvas.queryByText('Enter a valid email address.')).not.toBeInTheDocument();
+  },
+};
+
 export const Pending: Story = {
   args: { pending: true },
   play: async ({ canvas }) => {

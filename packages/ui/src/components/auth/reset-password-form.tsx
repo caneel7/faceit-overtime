@@ -1,11 +1,12 @@
 'use client';
 
 import { Password } from '@overtime/shared';
-import { useState, type FormEvent } from 'react';
+import type { FormEvent } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Button } from '../ui/button';
 import { FIELD_MESSAGES } from './field-errors';
 import { FormField } from './form-field';
+import { useFieldValidation } from './use-field-validation';
 
 type ResetPasswordFormProps = {
   onSubmit: (values: { password: string }) => void;
@@ -20,7 +21,9 @@ export function ResetPasswordForm({
   pending = false,
   error,
 }: ResetPasswordFormProps) {
-  const [passwordError, setPasswordError] = useState<string>();
+  const { errors, setErrors, field } = useFieldValidation<'password'>({
+    password: { schema: Password, message: FIELD_MESSAGES.password },
+  });
 
   if (error === 'invalid_token') {
     return (
@@ -44,10 +47,10 @@ export function ResetPasswordForm({
       String(new FormData(event.currentTarget).get('password') ?? ''),
     );
     if (!parsed.success) {
-      setPasswordError(FIELD_MESSAGES.password);
+      setErrors({ password: FIELD_MESSAGES.password });
       return;
     }
-    setPasswordError(undefined);
+    setErrors({});
     onSubmit({ password: parsed.data });
   }
 
@@ -59,8 +62,9 @@ export function ResetPasswordForm({
         type="password"
         label="New password"
         autoComplete="new-password"
+        {...field('password')}
         hint="At least 10 characters. You'll be signed out everywhere else."
-        error={passwordError}
+        error={errors.password}
         disabled={pending}
       />
       <Button type="submit" className="w-full" disabled={pending}>

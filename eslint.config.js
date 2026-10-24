@@ -19,6 +19,12 @@ const NO_RAW_JSON = {
   message: 'Use respond(c, Schema, data) from @overtime/shared/hono.',
 };
 
+const NO_BROWSER_STORAGE = ['localStorage', 'sessionStorage', 'indexedDB'].map((name) => ({
+  name,
+  message:
+    'Tokens and session data stay in memory (lib/session-store.ts), never in browser storage.',
+}));
+
 const serverOnlyForClients = {
   paths: [
     {
@@ -102,7 +108,18 @@ export default defineConfig([
 
   {
     files: ['apps/web/**/*.{ts,tsx}', 'packages/ui/**/*.{ts,tsx}'],
-    rules: { 'no-restricted-imports': ['error', serverOnlyForClients] },
+    rules: {
+      'no-restricted-imports': ['error', serverOnlyForClients],
+      'no-restricted-globals': ['error', ...NO_BROWSER_STORAGE],
+      'no-restricted-properties': [
+        'error',
+        ...NO_BROWSER_STORAGE.map(({ name, message }) => ({
+          object: 'window',
+          property: name,
+          message,
+        })),
+      ],
+    },
   },
 
   {
