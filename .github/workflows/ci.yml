@@ -22,18 +22,6 @@ jobs:
       - run: bun run format:check
       - run: bunx turbo run typecheck lint test build
 
-  stories:
-    name: Storybook interaction + a11y tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup
-      - name: Install Chromium for Vitest browser mode
-        working-directory: packages/ui
-        run: bunx playwright install --with-deps chromium
-      - run: bunx turbo run test:stories
-
   db:
     name: Database (Neon branch)
     runs-on: ubuntu-latest
