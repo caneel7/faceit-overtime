@@ -80,3 +80,25 @@ export type * from './models/team';
 export { BEST_OF, EVENT_STATUSES } from './models/event';
 export { REGIONS } from './models/player';
 export { TEAM_MAX_COACHES, TEAM_MAX_PLAYERS } from './models/team';
+export { FieldShell } from './blocks/form/field-shell';
+export { EligibilitySummary } from './blocks/event/eligibility-summary';
+export { EventCard } from './blocks/event/event-card';
+export {
+  EventFilters,
+  NO_FILTERS,
+  hasFilters,
+  type EventFilterValue,
+  type EventStatusFilter,
+} from './blocks/event/event-filters';
+export { EventForm } from './blocks/event/event-form';
+export { EVENT_FORM_DEFAULTS, EventFormValues } from './blocks/event/event-form.schema';
+export { EventHeader } from './blocks/event/event-header';
+export { EventList } from './blocks/event/event-list';
+export { EventSettingsView } from './blocks/event/event-settings-view';
+export { EventStatusBadge } from './blocks/event/event-status-badge';
+export { EventStatusStepper } from './blocks/event/event-status-stepper';
+export { TransitionActions, type TransitionTarget } from './blocks/event/transition-actions';
+export { EventAdminPage } from './pages/event/event-admin-page';
+export { EventFormPage } from './pages/event/event-form-page';
+export { EventPage } from './pages/event/event-page';
+export { EventsPage } from './pages/event/events-page';
