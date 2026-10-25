@@ -1,6 +1,6 @@
 'use client';
 
-import { LoginResponse, type ErrorCode } from '@overtime/shared';
+import type { ErrorCode } from '@overtime/shared';
 import {
   AuthLayout,
   CheckEmailNotice,
@@ -12,8 +12,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { UnexpectedError } from '../../../components/unexpected-error';
-import { api, errorCode } from '../../../lib/api-client';
-import { useSessionStore } from '../../../lib/session-store';
+import { errorCodeOf } from '../../../lib/api-client';
+import { useLogin, useResendVerification } from '../../../lib/auth-queries';
 import { useLeaveWhenSignedIn } from '../use-leave-when-signed-in';
 
 const ERRORS: Partial<Record<ErrorCode, SignInError>> = {
@@ -22,45 +22,26 @@ const ERRORS: Partial<Record<ErrorCode, SignInError>> = {
   RATE_LIMITED: 'rate_limited',
 };
 
+function signInError(error: unknown): SignInError | 'unexpected' {
+  const code = errorCodeOf(error);
+  return (code && ERRORS[code]) || 'unexpected';
+}
+
 export function SignIn({ next, initialError }: { next: string; initialError?: SignInError }) {
   const router = useRouter();
-  const signIn = useSessionStore((s) => s.signIn);
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<SignInError | 'unexpected' | undefined>(initialError);
+  const login = useLogin();
+  const resend = useResendVerification();
   const [email, setEmail] = useState('');
-  const [resendPending, setResendPending] = useState(false);
-  const [resent, setResent] = useState(false);
   useLeaveWhenSignedIn(next);
 
-  async function handleSubmit(values: SignInValues) {
-    setPending(true);
+  function handleSubmit(values: SignInValues) {
     setEmail(values.email);
-    try {
-      const res = await api.api.auth.login.$post({ json: values });
-      if (res.ok) {
-        signIn(LoginResponse.parse(await res.json()));
-        router.replace(next);
-        return;
-      }
-      const code = await errorCode(res);
-      setError((code && ERRORS[code]) || 'unexpected');
-    } catch {
-      setError('unexpected');
-    }
-    setPending(false);
+    resend.reset();
+    login.mutate(values, { onSuccess: () => router.replace(next) });
   }
 
-  async function handleResend() {
-    setResendPending(true);
-    try {
-      const res = await api.api.auth['verify-email'].resend.$post({ json: { email } });
-      if (res.ok) setResent(true);
-      else setError((await errorCode(res)) === 'RATE_LIMITED' ? 'rate_limited' : 'unexpected');
-    } catch {
-      setError('unexpected');
-    }
-    setResendPending(false);
-  }
+  const failure = resend.error ?? login.error;
+  const error = failure ? signInError(failure) : login.isIdle ? initialError : undefined;
 
   return (
     <AuthLayout
@@ -75,7 +56,7 @@ export function SignIn({ next, initialError }: { next: string; initialError?: Si
         </span>
       }
     >
-      {resent ? (
+      {resend.isSuccess ? (
         <CheckEmailNotice email={email} kind="verify" />
       ) : (
         <>
@@ -84,10 +65,10 @@ export function SignIn({ next, initialError }: { next: string; initialError?: Si
             onSubmit={handleSubmit}
             faceitHref={`/api/auth/faceit/start?next=${encodeURIComponent(next)}`}
             forgotPasswordHref="/forgot-password"
-            pending={pending}
+            pending={login.isPending || login.isSuccess}
             error={error === 'unexpected' ? undefined : error}
-            onResendVerification={handleResend}
-            resendPending={resendPending}
+            onResendVerification={() => resend.mutate({ email })}
+            resendPending={resend.isPending}
           />
         </>
       )}

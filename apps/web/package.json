@@ -15,6 +15,7 @@
     "@opennextjs/cloudflare": "1.20.13",
     "@overtime/shared": "workspace:*",
     "@overtime/ui": "workspace:*",
+    "@tanstack/react-query": "5.104.2",
     "hono": "catalog:",
     "next": "16.4.2",
     "react": "catalog:",

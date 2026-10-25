@@ -1,33 +1,29 @@
 'use client';
 
-import { OpaqueToken, VerifyEmailResponse } from '@overtime/shared';
+import { OpaqueToken } from '@overtime/shared';
 import { AuthLayout, VerifyEmailStatus } from '@overtime/ui';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { api, hasSessionMarker, refreshSession } from '../../../lib/api-client';
-import { useSessionStore } from '../../../lib/session-store';
+import { hasSessionMarker, refreshSession } from '../../../lib/api-client';
+import { useVerifyEmail } from '../../../lib/auth-queries';
 
 export function VerifyEmail({ token }: { token: string | null }) {
   const router = useRouter();
-  const signIn = useSessionStore((s) => s.signIn);
+  const { mutate } = useVerifyEmail();
   const [failed, setFailed] = useState(() => !OpaqueToken.safeParse(token).success);
   const started = useRef(false);
 
   useEffect(() => {
     if (failed || started.current || !token) return;
     started.current = true;
-    api.api.auth['verify-email']
-      .$post({ json: { token } })
-      .then(async (res) => {
-        if (res.ok) {
-          signIn(VerifyEmailResponse.parse(await res.json()));
-          return router.replace('/dashboard');
-        }
+    mutate(token, {
+      onSuccess: () => router.replace('/dashboard'),
+      onError: async () => {
         if (hasSessionMarker() && (await refreshSession())) return router.replace('/dashboard');
         setFailed(true);
-      })
-      .catch(() => setFailed(true));
-  }, [failed, token, signIn, router]);
+      },
+    });
+  }, [failed, token, mutate, router]);
 
   return (
     <AuthLayout title={failed ? 'Link not valid' : 'Verifying'}>

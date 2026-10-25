@@ -2,29 +2,17 @@
 
 import { AuthLayout, ForgotPasswordForm } from '@overtime/ui';
 import Link from 'next/link';
-import { useState } from 'react';
 import { UnexpectedError } from '../../../components/unexpected-error';
-import { api, errorCode } from '../../../lib/api-client';
+import { errorCodeOf } from '../../../lib/api-client';
+import { useForgotPassword } from '../../../lib/auth-queries';
 import { useLeaveWhenSignedIn } from '../use-leave-when-signed-in';
 
 export default function ForgotPasswordPage() {
-  const [pending, setPending] = useState(false);
-  const [sentTo, setSentTo] = useState<string>();
-  const [error, setError] = useState<'rate_limited' | 'unexpected'>();
+  const forgot = useForgotPassword();
   useLeaveWhenSignedIn('/dashboard');
 
-  async function handleSubmit({ email }: { email: string }) {
-    setPending(true);
-    setError(undefined);
-    try {
-      const res = await api.api.auth.password.forgot.$post({ json: { email } });
-      if (res.ok) setSentTo(email);
-      else setError((await errorCode(res)) === 'RATE_LIMITED' ? 'rate_limited' : 'unexpected');
-    } catch {
-      setError('unexpected');
-    }
-    setPending(false);
-  }
+  const rateLimited = errorCodeOf(forgot.error) === 'RATE_LIMITED';
+  const sentTo = forgot.isSuccess ? forgot.variables.email : undefined;
 
   return (
     <AuthLayout
@@ -36,12 +24,12 @@ export default function ForgotPasswordPage() {
         </Link>
       }
     >
-      {error === 'unexpected' ? <UnexpectedError /> : null}
+      {forgot.isError && !rateLimited ? <UnexpectedError /> : null}
       <ForgotPasswordForm
-        onSubmit={handleSubmit}
-        pending={pending}
+        onSubmit={(values) => forgot.mutate(values)}
+        pending={forgot.isPending}
         sentTo={sentTo}
-        error={error === 'rate_limited' ? error : undefined}
+        error={rateLimited ? 'rate_limited' : undefined}
       />
     </AuthLayout>
   );

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import './globals.css';
+import { QueryProvider } from './query-provider';
 import { SessionProvider } from './session-provider';
 import { SiteHeader } from './site-header';
 
@@ -13,10 +14,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body className="flex min-h-dvh flex-col antialiased">
-        <SessionProvider>
-          <SiteHeader />
-          <div className="flex flex-1 flex-col">{children}</div>
-        </SessionProvider>
+        <QueryProvider>
+          <SessionProvider>
+            <SiteHeader />
+            <div className="flex flex-1 flex-col">{children}</div>
+          </SessionProvider>
+        </QueryProvider>
         <footer className="border-t px-4 py-6 text-center text-xs text-muted-foreground">
           Unofficial — uses the FACEIT Data API.
         </footer>

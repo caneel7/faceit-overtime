@@ -3,17 +3,17 @@
 import { UserMenu } from '@overtime/ui';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { signOut } from '../lib/api-client';
+import { useSignOut } from '../lib/auth-queries';
 import { useSessionStore } from '../lib/session-store';
 
 export function SiteHeader() {
   const router = useRouter();
   const status = useSessionStore((s) => s.status);
   const me = useSessionStore((s) => s.me);
+  const signOut = useSignOut();
 
-  async function handleSignOut() {
-    await signOut();
-    router.replace('/');
+  function handleSignOut() {
+    signOut.mutate(undefined, { onSettled: () => router.replace('/') });
   }
 
   return (

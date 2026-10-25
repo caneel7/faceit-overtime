@@ -1,72 +1,38 @@
 'use client';
 
-import { EmailAvailabilityResponse } from '@overtime/shared';
-import {
-  AuthLayout,
-  CheckEmailNotice,
-  SignUpForm,
-  type EmailStatus,
-  type SignUpValues,
-} from '@overtime/ui';
+import { AuthLayout, CheckEmailNotice, SignUpForm, type EmailStatus } from '@overtime/ui';
 import Link from 'next/link';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { UnexpectedError } from '../../../components/unexpected-error';
-import { api, errorCode } from '../../../lib/api-client';
+import { errorCodeOf } from '../../../lib/api-client';
+import {
+  useEmailAvailability,
+  useRegister,
+  useResendVerification,
+} from '../../../lib/auth-queries';
 import { useLeaveWhenSignedIn } from '../use-leave-when-signed-in';
 
 export default function SignUpPage() {
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<'rate_limited' | 'unexpected'>();
-  const [emailStatus, setEmailStatus] = useState<EmailStatus>('unknown');
-  const [sentTo, setSentTo] = useState<string>();
-  const [resendPending, setResendPending] = useState(false);
-  const [resent, setResent] = useState(false);
-  const lastChecked = useRef<string>(null);
+  const [checkedEmail, setCheckedEmail] = useState<string | null>(null);
+  const availability = useEmailAvailability(checkedEmail);
+  const register = useRegister();
+  const resend = useResendVerification();
   useLeaveWhenSignedIn('/dashboard');
 
-  async function handleEmailBlur(email: string) {
-    if (lastChecked.current === email) return;
-    lastChecked.current = email;
-    setEmailStatus('checking');
-    try {
-      const res = await api.api.auth['email-available'].$get({ query: { email } });
-      if (lastChecked.current !== email) return;
-      if (!res.ok) return setEmailStatus('unknown');
-      const { available } = EmailAvailabilityResponse.parse(await res.json());
-      setEmailStatus(available ? 'available' : 'taken');
-    } catch {
-      setEmailStatus('unknown');
-    }
-  }
+  const registerCode = errorCodeOf(register.error);
+  const sentTo = register.isSuccess ? register.variables.email : null;
 
-  async function handleSubmit(values: SignUpValues) {
-    setPending(true);
-    setError(undefined);
-    try {
-      const res = await api.api.auth.register.$post({ json: values });
-      if (res.ok) {
-        setSentTo(values.email);
-      } else {
-        const code = await errorCode(res);
-        if (code === 'EMAIL_TAKEN') setEmailStatus('taken');
-        else setError(code === 'RATE_LIMITED' ? 'rate_limited' : 'unexpected');
-      }
-    } catch {
-      setError('unexpected');
-    }
-    setPending(false);
-  }
+  let emailStatus: EmailStatus = 'unknown';
+  if (registerCode === 'EMAIL_TAKEN') emailStatus = 'taken';
+  else if (availability.isFetching) emailStatus = 'checking';
+  else if (availability.data) emailStatus = availability.data.available ? 'available' : 'taken';
 
-  async function handleResend() {
-    if (!sentTo) return;
-    setResendPending(true);
-    try {
-      const res = await api.api.auth['verify-email'].resend.$post({ json: { email: sentTo } });
-      if (res.ok) setResent(true);
-    } catch {
-      setResent(false);
-    }
-    setResendPending(false);
+  const rateLimited = registerCode === 'RATE_LIMITED';
+  const unexpected = register.isError && !rateLimited && registerCode !== 'EMAIL_TAKEN';
+
+  function handleEmailBlur(email: string) {
+    register.reset();
+    setCheckedEmail(email);
   }
 
   return (
@@ -86,20 +52,20 @@ export default function SignUpPage() {
         <CheckEmailNotice
           email={sentTo}
           kind="verify"
-          onResend={handleResend}
-          resendPending={resendPending}
-          resent={resent}
+          onResend={() => resend.mutate({ email: sentTo })}
+          resendPending={resend.isPending}
+          resent={resend.isSuccess}
         />
       ) : (
         <>
-          {error === 'unexpected' ? <UnexpectedError /> : null}
+          {unexpected ? <UnexpectedError /> : null}
           <SignUpForm
-            onSubmit={handleSubmit}
+            onSubmit={(values) => register.mutate(values)}
             onEmailBlur={handleEmailBlur}
             emailStatus={emailStatus}
             signInHref="/signin"
-            pending={pending}
-            error={error === 'rate_limited' ? error : undefined}
+            pending={register.isPending}
+            error={rateLimited ? 'rate_limited' : undefined}
           />
         </>
       )}
