@@ -5,13 +5,20 @@ import type {
   teamPlayers,
   teams,
   trustedDevices,
+  userIdentities,
   users,
   userSessions,
+  userTokens,
   userTwoFactors,
 } from '../schema';
 
 export type GlobalTable = typeof players | typeof users | typeof teams | typeof teamPlayers;
-export type UserTable = typeof userSessions | typeof userTwoFactors | typeof trustedDevices;
+export type UserTable =
+  | typeof userSessions
+  | typeof userTwoFactors
+  | typeof trustedDevices
+  | typeof userIdentities
+  | typeof userTokens;
 export type AnyTable = GlobalTable | UserTable;
 
 export type Row<T extends PgTable> = T['$inferSelect'];
@@ -68,16 +75,12 @@ type Clause<T extends PgTable, R = object> = {
 } & {
   [K in Col<T> as `${K} ${'ISNULL' | 'NOTNULL'}`]?: true;
 } & {
-  // `string extends K`: a relations object widened to Record<string, …> filters nothing
   [K in keyof R as string extends K ? never : K]?: R[K] extends Relation<PgTable, infer Target>
     ? Clause<Target>
     : never;
 };
 
-// Keys in one object are ANDed; a top-level array is ORed
 export type Where<T extends PgTable, R = object> = Clause<T, R> | readonly Clause<T, R>[];
-
-// ---- reads ----
 
 export type OrderBy<T extends PgTable> = { [K in Col<T>]?: 'asc' | 'desc' };
 
@@ -87,7 +90,6 @@ export type FindOpts<T extends PgTable, R, J extends JoinSpec<R>> = {
   orderBy?: OrderBy<T>;
   limit?: number;
   offset?: number;
-  // main table only: include soft-deleted rows
   withDeleted?: true;
 };
 
@@ -99,7 +101,6 @@ type Joined<R, J> = {
     : never;
 };
 
-// No relations requested → plain rows. With relations → main row under its SQL name, each relation under its key.
 export type Result<T extends PgTable, R, J> = keyof J extends never
   ? Row<T>
   : { [K in TableName<T>]: Row<T> } & Joined<R, J>;

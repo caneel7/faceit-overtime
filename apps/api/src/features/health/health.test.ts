@@ -1,7 +1,7 @@
 import { ErrorBody, HealthResponse } from '@overtime/shared';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { testCtx, testEnv } from '../../../test/env';
-import app from '../../index';
+import { app } from '../../index';
 
 const { ctx, settle } = testCtx();
 afterEach(() => settle());
@@ -14,7 +14,12 @@ describe('GET /api/health', () => {
   it.skipIf(!process.env.DATABASE_URL)(
     'returns ok, the version and db ok against a real database',
     async () => {
-      const res = await app.request('/api/health', {}, testEnv({}, process.env.DATABASE_URL), ctx);
+      const res = await app.request(
+        '/api/health',
+        {},
+        testEnv({ DB_PING_TIMEOUT_MS: '15000' }, process.env.DATABASE_URL),
+        ctx,
+      );
       expect(res.status).toBe(200);
       expect(HealthResponse.parse(await res.json())).toEqual({
         status: 'ok',

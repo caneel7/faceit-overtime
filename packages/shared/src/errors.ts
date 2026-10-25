@@ -7,6 +7,11 @@ export const ErrorCode = z.enum([
   'CONFLICT',
   'INTERNAL',
   'SERVICE_UNAVAILABLE',
+  'INVALID_CREDENTIALS',
+  'EMAIL_NOT_VERIFIED',
+  'INVALID_TOKEN',
+  'RATE_LIMITED',
+  'EMAIL_TAKEN',
 ]);
 export type ErrorCode = z.infer<typeof ErrorCode>;
 

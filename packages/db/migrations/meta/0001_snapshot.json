@@ -1,6 +1,6 @@
 {
-  "id": "ee27775f-cfbf-4677-a010-a099be48f255",
-  "prevId": "81e49727-1165-465c-8c4c-46f06601f0ec",
+  "id": "31365228-848b-4578-ab0a-e8a02e4be4d9",
+  "prevId": "406b2639-4982-4913-89e0-309c14ad76e1",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -14,26 +14,6 @@
           "primaryKey": true,
           "notNull": true,
           "default": "uuidv7()"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
         },
         "faceit_player_id": {
           "name": "faceit_player_id",
@@ -82,48 +62,6 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
-        }
-      },
-      "indexes": {
-        "players_faceit_player_id_key": {
-          "name": "players_faceit_player_id_key",
-          "columns": [
-            {
-              "expression": "faceit_player_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "deleted_at is null",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "players_cs2_level_check": {
-          "name": "players_cs2_level_check",
-          "value": "\"players\".\"cs2_level\" between 1 and 10"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.team_players": {
-      "name": "team_players",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "uuidv7()"
         },
         "created_at": {
           "name": "created_at",
@@ -144,6 +82,43 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
+        }
+      },
+      "indexes": {
+        "players_faceit_player_id_key": {
+          "name": "players_faceit_player_id_key",
+          "columns": [
+            {
+              "expression": "faceit_player_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"players\".\"deleted_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.team_players": {
+      "name": "team_players",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
         },
         "team_id": {
           "name": "team_id",
@@ -156,6 +131,26 @@
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -176,7 +171,7 @@
             }
           ],
           "isUnique": true,
-          "where": "deleted_at is null",
+          "where": "\"team_players\".\"deleted_at\" is null",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -192,7 +187,7 @@
             }
           ],
           "isUnique": false,
-          "where": "deleted_at is null",
+          "where": "\"team_players\".\"deleted_at\" is null",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -243,26 +238,6 @@
           "notNull": true,
           "default": "uuidv7()"
         },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
         "name": {
           "name": "name",
           "type": "text",
@@ -286,6 +261,26 @@
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -300,7 +295,7 @@
             }
           ],
           "isUnique": false,
-          "where": "deleted_at is null",
+          "where": "\"teams\".\"deleted_at\" is null",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -337,12 +332,7 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {
-        "teams_tag_check": {
-          "name": "teams_tag_check",
-          "value": "char_length(\"teams\".\"tag\") between 1 and 5"
-        }
-      },
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.trusted_devices": {
@@ -355,26 +345,6 @@
           "primaryKey": true,
           "notNull": true,
           "default": "uuidv7()"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
         },
         "user_id": {
           "name": "user_id",
@@ -429,6 +399,26 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -443,7 +433,7 @@
             }
           ],
           "isUnique": false,
-          "where": "revoked_at is null and deleted_at is null",
+          "where": "(\"trusted_devices\".\"revoked_at\" is null and \"trusted_devices\".\"deleted_at\" is null)",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -459,7 +449,7 @@
             }
           ],
           "isUnique": false,
-          "where": "deleted_at is null",
+          "where": "\"trusted_devices\".\"deleted_at\" is null",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -491,12 +481,7 @@
         }
       },
       "policies": {},
-      "checkConstraints": {
-        "trusted_devices_expiry_check": {
-          "name": "trusted_devices_expiry_check",
-          "value": "\"trusted_devices\".\"expires_at\" > \"trusted_devices\".\"created_at\""
-        }
-      },
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.user_sessions": {
@@ -509,26 +494,6 @@
           "primaryKey": true,
           "notNull": true,
           "default": "uuidv7()"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
         },
         "user_id": {
           "name": "user_id",
@@ -550,7 +515,8 @@
         },
         "auth_methods": {
           "name": "auth_methods",
-          "type": "text[]",
+          "type": "auth_method[]",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         },
@@ -599,7 +565,28 @@
         },
         "revoked_reason": {
           "name": "revoked_reason",
-          "type": "text",
+          "type": "session_revoked_reason",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
         }
@@ -616,7 +603,7 @@
             }
           ],
           "isUnique": false,
-          "where": "revoked_at is null and deleted_at is null",
+          "where": "(\"user_sessions\".\"revoked_at\" is null and \"user_sessions\".\"deleted_at\" is null)",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -662,7 +649,7 @@
             }
           ],
           "isUnique": false,
-          "where": "deleted_at is null",
+          "where": "\"user_sessions\".\"deleted_at\" is null",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -707,20 +694,7 @@
         }
       },
       "policies": {},
-      "checkConstraints": {
-        "user_sessions_auth_methods_check": {
-          "name": "user_sessions_auth_methods_check",
-          "value": "\"user_sessions\".\"auth_methods\" <@ array['faceit', 'totp', 'trusted_device']::text[] and 'faceit' = any(\"user_sessions\".\"auth_methods\")"
-        },
-        "user_sessions_revoked_reason_check": {
-          "name": "user_sessions_revoked_reason_check",
-          "value": "\"user_sessions\".\"revoked_reason\" in ('logout', 'reuse_detected', 'user_revoked', 'two_factor_reset')"
-        },
-        "user_sessions_revoked_check": {
-          "name": "user_sessions_revoked_check",
-          "value": "(\"user_sessions\".\"revoked_at\" is null) = (\"user_sessions\".\"revoked_reason\" is null)"
-        }
-      },
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.user_two_factors": {
@@ -734,26 +708,6 @@
           "notNull": true,
           "default": "uuidv7()"
         },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
         "user_id": {
           "name": "user_id",
           "type": "uuid",
@@ -762,7 +716,8 @@
         },
         "type": {
           "name": "type",
-          "type": "text",
+          "type": "two_factor_type",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
           "default": "'totp'"
@@ -781,6 +736,26 @@
         },
         "enabled_at": {
           "name": "enabled_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
@@ -804,7 +779,7 @@
             }
           ],
           "isUnique": true,
-          "where": "deleted_at is null",
+          "where": "\"user_two_factors\".\"deleted_at\" is null",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -828,12 +803,7 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {
-        "user_two_factors_type_check": {
-          "name": "user_two_factors_type_check",
-          "value": "\"user_two_factors\".\"type\" in ('totp')"
-        }
-      },
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.users": {
@@ -846,6 +816,49 @@
           "primaryKey": true,
           "notNull": true,
           "default": "uuidv7()"
+        },
+        "player_id": {
+          "name": "player_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "faceit_verified": {
+          "name": "faceit_verified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email_encrypted": {
+          "name": "email_encrypted",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email_hmac": {
+          "name": "email_hmac",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email_verified_at": {
+          "name": "email_verified_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "password_hash": {
+          "name": "password_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
@@ -866,19 +879,6 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
-        },
-        "player_id": {
-          "name": "player_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "faceit_verified": {
-          "name": "faceit_verified",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
         }
       },
       "indexes": {
@@ -893,7 +893,23 @@
             }
           ],
           "isUnique": true,
-          "where": "deleted_at is null",
+          "where": "\"users\".\"deleted_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "users_email_hmac_key": {
+          "name": "users_email_hmac_key",
+          "columns": [
+            {
+              "expression": "email_hmac",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"users\".\"deleted_at\" is null",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -921,7 +937,36 @@
       "isRLSEnabled": false
     }
   },
-  "enums": {},
+  "enums": {
+    "public.auth_method": {
+      "name": "auth_method",
+      "schema": "public",
+      "values": [
+        "faceit",
+        "password",
+        "totp",
+        "trusted_device"
+      ]
+    },
+    "public.session_revoked_reason": {
+      "name": "session_revoked_reason",
+      "schema": "public",
+      "values": [
+        "logout",
+        "reuse_detected",
+        "user_revoked",
+        "two_factor_reset",
+        "password_reset"
+      ]
+    },
+    "public.two_factor_type": {
+      "name": "two_factor_type",
+      "schema": "public",
+      "values": [
+        "totp"
+      ]
+    }
+  },
   "schemas": {},
   "sequences": {},
   "roles": {},

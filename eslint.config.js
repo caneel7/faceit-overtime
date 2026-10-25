@@ -9,6 +9,22 @@ import tseslint from 'typescript-eslint';
 
 const WEB = 'apps/web/**/*.{js,jsx,mjs,ts,tsx}';
 
+const NO_DB_SYSTEM = {
+  selector: "MemberExpression[property.name='system']",
+  message:
+    'db.system skips the user scope. Only auth lookups by secret hash or provider id (apps/api/src/features/auth) may use it.',
+};
+const NO_RAW_JSON = {
+  selector: "CallExpression[callee.property.name='json'][callee.object.name='c']",
+  message: 'Use respond(c, Schema, data) from @overtime/shared/hono.',
+};
+
+const NO_BROWSER_STORAGE = ['localStorage', 'sessionStorage', 'indexedDB'].map((name) => ({
+  name,
+  message:
+    'Tokens and session data stay in memory (lib/session-store.ts), never in browser storage.',
+}));
+
 const serverOnlyForClients = {
   paths: [
     {
@@ -92,7 +108,18 @@ export default defineConfig([
 
   {
     files: ['apps/web/**/*.{ts,tsx}', 'packages/ui/**/*.{ts,tsx}'],
-    rules: { 'no-restricted-imports': ['error', serverOnlyForClients] },
+    rules: {
+      'no-restricted-imports': ['error', serverOnlyForClients],
+      'no-restricted-globals': ['error', ...NO_BROWSER_STORAGE],
+      'no-restricted-properties': [
+        'error',
+        ...NO_BROWSER_STORAGE.map(({ name, message }) => ({
+          object: 'window',
+          property: name,
+          message,
+        })),
+      ],
+    },
   },
 
   {
@@ -124,12 +151,18 @@ export default defineConfig([
             {
               name: '@overtime/db/unscoped',
               message:
-                'Use db.global / db.forUser. Unscoped queries belong in packages/db/src/queries.',
+                'Every query goes through the query builder: db.global, db.forUser or db.system.',
             },
           ],
         },
       ],
     },
+  },
+
+  {
+    files: ['apps/api/src/**/*.ts'],
+    ignores: ['apps/api/src/features/auth/**'],
+    rules: { 'no-restricted-syntax': ['error', NO_DB_SYSTEM] },
   },
 
   {
@@ -145,20 +178,13 @@ export default defineConfig([
 
   {
     files: ['apps/api/src/features/**/*.ts'],
-    ignores: ['**/*.test.ts'],
-    rules: {
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: "CallExpression[callee.property.name='json'][callee.object.name='c']",
-          message: 'Use respond(c, Schema, data) from @overtime/shared/hono.',
-        },
-      ],
-    },
+    ignores: ['**/*.test.ts', 'apps/api/src/features/auth/**'],
+    rules: { 'no-restricted-syntax': ['error', NO_RAW_JSON, NO_DB_SYSTEM] },
   },
 
   {
-    files: ['packages/db/test/types.test.ts'],
-    rules: { '@typescript-eslint/ban-ts-comment': ['error', { 'ts-expect-error': false }] },
+    files: ['apps/api/src/features/auth/**/*.ts'],
+    ignores: ['**/*.test.ts'],
+    rules: { 'no-restricted-syntax': ['error', NO_RAW_JSON] },
   },
 ]);
