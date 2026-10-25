@@ -19,8 +19,8 @@ const meta = {
     header: mockHeader(),
     event: draftEvent,
     orgManageHref: '/o/uni-esports-club/manage',
-    publicHref: `/event/${draftEvent.id}`,
-    editHref: `/event/${draftEvent.id}/edit`,
+    publicHref: `/event/${draftEvent.slug}`,
+    editHref: `/event/${draftEvent.slug}/edit`,
     onTransition: fn(),
   },
 } satisfies Meta<typeof EventAdminPage>;

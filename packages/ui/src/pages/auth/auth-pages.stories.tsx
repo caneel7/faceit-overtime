@@ -84,7 +84,6 @@ export const AddEmail: Story = {
       suggestedEmail="kestrel.plays@mail.example"
       onSubmit={fn()}
       signInHref="/signin"
-      skipHref="/dashboard"
     />
   ),
 };

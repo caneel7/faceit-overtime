@@ -22,8 +22,9 @@ type HomePageProps = {
   openEvents: EventSummary[];
   live: LiveEvent[];
   loading?: boolean;
-  eventHref: (id: string) => string;
+  eventHref: (slug: string) => string;
   allEventsHref: string;
+  liveEventsHref: string;
   registerOrgHref: string;
   connectFaceitHref: string;
   signUpHref: string;
@@ -64,6 +65,7 @@ export function HomePage({
   loading = false,
   eventHref,
   allEventsHref,
+  liveEventsHref,
   registerOrgHref,
   connectFaceitHref,
   signUpHref,
@@ -111,7 +113,7 @@ export function HomePage({
           subtitle={
             viewer.kind === 'player' ? (
               <span className="flex flex-wrap items-center gap-2">
-                Matches your level and region:
+                Eligible at your level and region, closest to your ELO first:
                 <LevelBadge level={viewer.level} />
                 {viewer.region ? <span>{viewer.region}</span> : null}
                 {viewer.elo !== null ? <span>· {eloFormat.format(viewer.elo)} ELO</span> : null}
@@ -158,6 +160,16 @@ export function HomePage({
           id="home-live"
           title="Live now"
           subtitle="Current round of every event being played."
+          action={
+            live.length > 0 ? (
+              <a
+                href={liveEventsHref}
+                className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+              >
+                See all live events
+              </a>
+            ) : null
+          }
         />
         {loading ? (
           <div className="grid gap-4 md:grid-cols-2" role="status" aria-label="Loading live events">
@@ -170,9 +182,9 @@ export function HomePage({
           </p>
         ) : (
           <ul className="grid gap-4 md:grid-cols-2">
-            {live.map((item) => (
+            {live.slice(0, 4).map((item) => (
               <li key={item.event.id} className="grid">
-                <LiveEventCard live={item} href={eventHref(item.event.id)} />
+                <LiveEventCard live={item} href={eventHref(item.event.slug)} />
               </li>
             ))}
           </ul>

@@ -23,8 +23,8 @@ const meta = {
     viewer: 'public',
     now: MOCK_NOW,
     orgHref: '/o/uni-esports-club',
-    manageHref: `/event/${openEvent.id}/manage`,
-    registerHref: `/event/${openEvent.id}/register`,
+    manageHref: `/event/${openEvent.slug}/manage`,
+    registerHref: `/event/${openEvent.slug}/register`,
   },
 } satisfies Meta<typeof EventPage>;
 

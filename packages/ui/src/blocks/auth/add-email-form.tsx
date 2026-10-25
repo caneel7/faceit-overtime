@@ -17,7 +17,6 @@ type AddEmailFormProps = {
   suggestedEmail: string | null;
   onSubmit: (email: string) => void;
   signInHref: string;
-  skipHref?: string;
   sentTo?: string;
   pending?: boolean;
   error?: 'email_taken' | 'rate_limited';
@@ -27,7 +26,6 @@ export function AddEmailForm({
   suggestedEmail,
   onSubmit,
   signInHref,
-  skipHref,
   sentTo,
   pending = false,
   error,
@@ -86,14 +84,6 @@ export function AddEmailForm({
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? 'Sending…' : 'Send confirmation link'}
       </Button>
-      {skipHref ? (
-        <a
-          href={skipHref}
-          className="text-center text-sm text-muted-foreground underline-offset-4 hover:underline"
-        >
-          Skip for now
-        </a>
-      ) : null}
     </form>
   );
 }

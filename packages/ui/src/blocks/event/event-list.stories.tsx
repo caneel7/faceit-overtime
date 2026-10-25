@@ -9,7 +9,7 @@ const meta = {
   title: 'Blocks/Event/EventList',
   component: EventList,
   parameters: { layout: 'padded' },
-  args: { events: PUBLIC_EVENTS, hrefFor: (id: string) => `/event/${id}`, now: MOCK_NOW },
+  args: { events: PUBLIC_EVENTS, hrefFor: (slug: string) => `/event/${slug}`, now: MOCK_NOW },
 } satisfies Meta<typeof EventList>;
 
 export default meta;

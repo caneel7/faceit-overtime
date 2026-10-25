@@ -15,7 +15,7 @@ type EventsPageProps = {
   events: EventSummary[];
   filters: EventFilterValue;
   onFiltersChange: (filters: EventFilterValue) => void;
-  eventHref: (id: string) => string;
+  eventHref: (slug: string) => string;
   now: string;
   loading?: boolean;
   error?: boolean;

@@ -8,11 +8,11 @@ import { Button } from '../../primitives/button';
 import { RATE_LIMITED } from '../auth/messages';
 import { FIELD_MESSAGES } from '../form/field-errors';
 import { FormField } from '../form/form-field';
+import { slugify } from '../form/slugify';
 import {
   AccountAndOrgFields,
   ORG_FIELD_MESSAGES,
   OrgFields,
-  slugify,
   type RegisterOrgValues,
 } from './register-org-form.schema';
 

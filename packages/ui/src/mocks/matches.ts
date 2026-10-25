@@ -51,6 +51,7 @@ export const LIVE_EVENTS: LiveEvent[] = [
     event: {
       ...liveEvent,
       id: '01930b00-0000-7000-8000-000000000011',
+      slug: 'campus-clash-weekly',
       name: 'Campus Clash Weekly',
       org: campusClashSociety,
       registeredTeams: 8,

@@ -14,7 +14,7 @@ const meta = {
     org: uniEsportsClub,
     events: ORG_EVENTS,
     now: MOCK_NOW,
-    eventHref: (id: string) => `/event/${id}`,
+    eventHref: (slug: string) => `/event/${slug}`,
   },
 } satisfies Meta<typeof OrgPublicPage>;
 

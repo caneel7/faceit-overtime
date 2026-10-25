@@ -1,12 +1,15 @@
 import { z } from '@overtime/shared';
 import { REGIONS } from '../../models/player';
 
+export const EVENT_SLUG_PATTERN = /^[a-z0-9-]{3,60}$/;
+
 const Level = z.number().int().min(1).max(10).nullable();
 const BestOf = z.union([z.literal(1), z.literal(3), z.literal(5)]);
 
 export const EventFormValues = z
   .object({
     name: z.string().trim().min(1).max(80),
+    slug: z.string().trim().regex(EVENT_SLUG_PATTERN),
     description: z.string().trim().max(5000),
     maxSubs: z.union([z.literal(0), z.literal(1)]),
     maxTeams: z
@@ -41,6 +44,7 @@ export type EventFormValues = z.infer<typeof EventFormValues>;
 
 export const EVENT_FORM_DEFAULTS: EventFormValues = {
   name: '',
+  slug: '',
   description: '',
   maxSubs: 1,
   maxTeams: 16,
@@ -57,6 +61,7 @@ export const EVENT_FORM_DEFAULTS: EventFormValues = {
 
 export const EVENT_FIELD_MESSAGES = {
   name: 'Use 1 to 80 characters.',
+  slug: 'Use 3 to 60 lowercase letters, numbers or dashes.',
   description: 'Keep it under 5,000 characters.',
   maxTeams: 'Use an even number from 4 to 64.',
   maxLevel: 'The maximum level must be at least the minimum.',

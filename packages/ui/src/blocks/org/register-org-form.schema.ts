@@ -24,14 +24,3 @@ export const ORG_FIELD_MESSAGES = {
   orgName: 'Use 1 to 64 characters.',
   slug: 'Use 3 to 40 lowercase letters, numbers or dashes.',
 } as const;
-
-export function slugify(name: string): string {
-  return name
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 40)
-    .replace(/-+$/g, '');
-}

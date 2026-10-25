@@ -9,7 +9,13 @@ const meta = {
   title: 'Blocks/Event/EventForm',
   component: EventForm,
   parameters: { layout: 'padded' },
-  args: { mode: 'create', onSubmit: fn(), cancelHref: '/o/uni-esports-club/manage' },
+  args: {
+    mode: 'create',
+    onSubmit: fn(),
+    onSlugBlur: fn(),
+    cancelHref: '/o/uni-esports-club/manage',
+    appOrigin: 'https://overtime.caneel.dev',
+  },
   decorators: [
     (Story) => (
       <div className="max-w-xl">
@@ -29,6 +35,7 @@ export const Create: Story = {
     await expect(args.onSubmit).toHaveBeenCalledWith({
       ...EVENT_FORM_DEFAULTS,
       name: 'Autumn Cup #3',
+      slug: 'autumn-cup-3',
     });
   },
 };
@@ -58,6 +65,7 @@ export const WindowOrder: Story = {
   },
 };
 
+export const SlugTaken: Story = { args: { slugStatus: 'taken' } };
 export const Pending: Story = { args: { pending: true } };
 export const Locked: Story = {
   args: { mode: 'edit', defaultValues: draftFormValues, error: 'locked' },

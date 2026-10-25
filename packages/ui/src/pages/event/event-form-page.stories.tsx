@@ -15,6 +15,8 @@ const meta = {
     mode: 'create',
     onSubmit: fn(),
     cancelHref: '/o/uni-esports-club/manage',
+    appOrigin: 'https://overtime.caneel.dev',
+    onSlugBlur: fn(),
   },
 } satisfies Meta<typeof EventFormPage>;
 

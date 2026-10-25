@@ -35,6 +35,7 @@ export type EventSettings = {
 
 export type EventSummary = {
   id: string;
+  slug: string;
   name: string;
   org: OrgSummary;
   status: EventStatus;

@@ -7,7 +7,7 @@ import { EventCard } from './event-card';
 
 type EventListProps = {
   events: EventSummary[];
-  hrefFor: (id: string) => string;
+  hrefFor: (slug: string) => string;
   now: string;
   loading?: boolean;
   error?: boolean;
@@ -72,7 +72,7 @@ export function EventList({
     <ul className={GRID}>
       {events.map((event) => (
         <li key={event.id} className="grid">
-          <EventCard event={event} href={hrefFor(event.id)} now={now} />
+          <EventCard event={event} href={hrefFor(event.slug)} now={now} />
         </li>
       ))}
     </ul>

@@ -40,7 +40,7 @@ const meta = {
     registerOrgHref: '/organizations/new',
     now: MOCK_NOW,
     events: ORG_EVENTS,
-    eventManageHref: (id: string) => `/event/${id}/manage`,
+    eventManageHref: (slug: string) => `/event/${slug}/manage`,
     createEventHref: '/o/uni-esports-club/events/new',
     publicHref: '/o/uni-esports-club',
     admins: ADMINS,

@@ -12,7 +12,7 @@ type OrgPublicPageProps = {
   org: OrgSummary;
   events: EventSummary[];
   now: string;
-  eventHref: (id: string) => string;
+  eventHref: (slug: string) => string;
   manageHref?: string;
 };
 

@@ -1,8 +1,8 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { ReactNode } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { useState, type ReactNode } from 'react';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { REGIONS } from '../../models/player';
 import { Alert, AlertDescription, AlertTitle } from '../../primitives/alert';
 import { Button } from '../../primitives/button';
@@ -18,6 +18,7 @@ import {
 import { Textarea } from '../../primitives/textarea';
 import { describedBy, FieldShell } from '../form/field-shell';
 import { FormField } from '../form/form-field';
+import { slugify } from '../form/slugify';
 import { EVENT_FIELD_MESSAGES, EVENT_FORM_DEFAULTS, EventFormValues } from './event-form.schema';
 
 type Option = { value: number | null; label: string };
@@ -111,6 +112,9 @@ type EventFormProps = {
   cancelHref: string;
   pending?: boolean;
   error?: 'locked';
+  appOrigin: string;
+  slugStatus?: 'idle' | 'checking' | 'available' | 'taken';
+  onSlugBlur?: (slug: string) => void;
 };
 
 export function EventForm({
@@ -120,11 +124,16 @@ export function EventForm({
   cancelHref,
   pending = false,
   error,
+  appOrigin,
+  slugStatus = 'idle',
+  onSlugBlur,
 }: EventFormProps) {
+  const [slugEdited, setSlugEdited] = useState(mode === 'edit');
   const {
     register,
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<EventFormValues>({
     resolver: zodResolver(EventFormValues),
@@ -132,11 +141,20 @@ export function EventForm({
     defaultValues,
   });
 
+  const slug = useWatch({ control, name: 'slug' });
+  const host = appOrigin.replace(/^https?:\/\//, '');
+
   const message = (field: keyof typeof EVENT_FIELD_MESSAGES) =>
     errors[field] ? EVENT_FIELD_MESSAGES[field] : undefined;
 
   return (
-    <form className="grid gap-6" onSubmit={handleSubmit((values) => onSubmit(values))} noValidate>
+    <form
+      className="grid gap-6"
+      onSubmit={handleSubmit((values) => {
+        if (slugStatus !== 'taken') onSubmit(values);
+      })}
+      noValidate
+    >
       {error === 'locked' ? (
         <Alert variant="destructive">
           <AlertTitle>This event can't be edited any more</AlertTitle>
@@ -151,8 +169,37 @@ export function EventForm({
           id="event-name"
           label="Name"
           placeholder="Autumn Cup #3"
-          {...register('name')}
+          {...register('name', {
+            onChange: (e: { target: { value: string } }) => {
+              if (!slugEdited) setValue('slug', slugify(e.target.value, 60));
+            },
+          })}
           error={message('name')}
+          disabled={pending}
+        />
+        <FormField
+          id="event-slug"
+          label="Address"
+          autoCapitalize="none"
+          spellCheck={false}
+          {...register('slug', {
+            onChange: () => setSlugEdited(true),
+            onBlur: (e: { target: { value: string } }) => {
+              const parsed = EventFormValues.shape.slug.safeParse(e.target.value);
+              if (parsed.success) onSlugBlur?.(parsed.data);
+            },
+          })}
+          hint={
+            <>
+              Event page:{' '}
+              <span className="text-foreground">{`${host}/event/${slug || 'your-event'}`}</span>
+              {slugStatus === 'checking' ? ' · Checking…' : null}
+              {slugStatus === 'available' ? (
+                <span className="text-emerald-300"> · Available</span>
+              ) : null}
+            </>
+          }
+          error={message('slug') ?? (slugStatus === 'taken' ? 'That address is taken.' : undefined)}
           disabled={pending}
         />
         <FieldShell

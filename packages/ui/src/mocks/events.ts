@@ -1,6 +1,7 @@
 import type { EventDetail, EventSettings, EventSummary } from '../models/event';
 import type { EventFilterValue } from '../blocks/event/event-filters';
 import { EVENT_FORM_DEFAULTS, type EventFormValues } from '../blocks/event/event-form.schema';
+import { slugify } from '../blocks/form/slugify';
 import { nightOwlsLeague, uniEsportsClub } from './orgs';
 import { daysFromNow, hoursFromNow } from './time';
 
@@ -27,6 +28,7 @@ function event(
   const s = settings(overrides.settings);
   return {
     id: `01930b00-0000-7000-8000-0000000000${id}`,
+    slug: slugify(name, 60),
     name,
     org: uniEsportsClub,
     status: 'registration_open',
@@ -134,6 +136,7 @@ export function filterEvents(events: EventSummary[], filters: EventFilterValue):
 export const draftFormValues: EventFormValues = {
   ...EVENT_FORM_DEFAULTS,
   name: 'Spring League Draft',
+  slug: 'spring-league-draft',
   description: 'Weekly Swiss for club members.',
   minLevel: 4,
   maxLevel: 8,

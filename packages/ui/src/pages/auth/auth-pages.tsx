@@ -139,7 +139,7 @@ export function AddEmailPage({ header, ...form }: AddEmailPageProps) {
       description={
         form.sentTo
           ? undefined
-          : 'Organizers and team captains find people by email, and invites are sent there. We confirm it with a link.'
+          : 'Every account needs an email: organizers and captains invite people by it. Confirm it with the link we send.'
       }
     >
       <AddEmailForm {...form} />

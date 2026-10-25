@@ -17,7 +17,7 @@ import { EventCard } from './event-card';
 const meta = {
   title: 'Blocks/Event/EventCard',
   component: EventCard,
-  args: { event: openEvent, href: `/event/${openEvent.id}`, now: MOCK_NOW },
+  args: { event: openEvent, href: `/event/${openEvent.slug}`, now: MOCK_NOW },
   decorators: [
     (Story) => (
       <div className="w-80 max-w-full">

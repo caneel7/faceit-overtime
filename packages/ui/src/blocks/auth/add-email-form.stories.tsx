@@ -9,7 +9,6 @@ const meta = {
     suggestedEmail: 'kestrel.plays@mail.example',
     onSubmit: fn(),
     signInHref: '/signin',
-    skipHref: '/dashboard',
   },
   decorators: [
     (Story) => (

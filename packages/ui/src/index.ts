@@ -109,7 +109,6 @@ export { RegisterOrgForm, type SlugStatus } from './blocks/org/register-org-form
 export {
   AccountAndOrgFields,
   OrgFields,
-  slugify,
   type RegisterOrgValues,
 } from './blocks/org/register-org-form.schema';
 export { OrgDashboardPage } from './pages/org/org-dashboard-page';
@@ -159,3 +158,4 @@ export type * from './models/match';
 export { HomePage, type HomeViewer } from './pages/home/home-page';
 export { MyOrgsPage } from './pages/org/my-orgs-page';
 export { MyTeamsPage } from './pages/team/my-teams-page';
+export { slugify } from './blocks/form/slugify';

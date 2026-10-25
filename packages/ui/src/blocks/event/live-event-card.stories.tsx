@@ -7,7 +7,7 @@ import { LiveEventCard } from './live-event-card';
 const meta = {
   title: 'Blocks/Event/LiveEventCard',
   component: LiveEventCard,
-  args: { live: LIVE_EVENTS[0]!, href: `/event/${LIVE_EVENTS[0]!.event.id}` },
+  args: { live: LIVE_EVENTS[0]!, href: `/event/${LIVE_EVENTS[0]!.event.slug}` },
   decorators: [
     (Story) => (
       <div className="w-[32rem] max-w-full">

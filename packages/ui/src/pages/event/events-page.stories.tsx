@@ -15,7 +15,7 @@ function Interactive({ initial = NO_FILTERS }: { initial?: EventFilterValue }) {
       events={filterEvents(PUBLIC_EVENTS, filters)}
       filters={filters}
       onFiltersChange={setFilters}
-      eventHref={(id) => `/event/${id}`}
+      eventHref={(slug) => `/event/${slug}`}
       now={MOCK_NOW}
     />
   );
@@ -30,7 +30,7 @@ const meta = {
     events: PUBLIC_EVENTS,
     filters: NO_FILTERS,
     onFiltersChange: fn(),
-    eventHref: (id: string) => `/event/${id}`,
+    eventHref: (slug: string) => `/event/${slug}`,
     now: MOCK_NOW,
   },
 } satisfies Meta<typeof EventsPage>;
@@ -42,6 +42,10 @@ export const Default: Story = { render: () => <Interactive /> };
 
 export const OpenInEuAtLevel7: Story = {
   render: () => <Interactive initial={{ status: 'open', region: 'EU', level: 7 }} />,
+};
+
+export const LiveOnly: Story = {
+  render: () => <Interactive initial={{ status: 'live', region: null, level: null }} />,
 };
 
 export const NoMatches: Story = {

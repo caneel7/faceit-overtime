@@ -20,7 +20,7 @@ type OrgDashboardPageProps = {
   now: string;
   events: EventSummary[];
   eventsLoading?: boolean;
-  eventManageHref: (id: string) => string;
+  eventManageHref: (slug: string) => string;
   createEventHref: string;
   publicHref: string;
   admins: OrgAdmin[];
@@ -32,14 +32,26 @@ type OrgDashboardPageProps = {
   inviteAdminError?: InviteAdminError;
   onRemoveAdmin: (userId: string) => void;
   onRevokeInvite: (inviteId: string) => void;
-  defaultTab?: 'events' | 'admins';
+  defaultTab?: 'admins';
 };
 
-const GROUPS: { title: string; statuses: EventStatus[] }[] = [
-  { title: 'Drafts', statuses: ['draft'] },
-  { title: 'Registration', statuses: ['registration_open', 'registration_closed'] },
-  { title: 'Live', statuses: ['in_progress'] },
-  { title: 'Past', statuses: ['completed', 'cancelled'] },
+type Group = { value: string; title: string; statuses: EventStatus[]; empty: string };
+
+const GROUPS: Group[] = [
+  { value: 'drafts', title: 'Drafts', statuses: ['draft'], empty: 'No drafts.' },
+  {
+    value: 'registration',
+    title: 'Registration',
+    statuses: ['registration_open', 'registration_closed'],
+    empty: 'No events taking or closing registration.',
+  },
+  { value: 'live', title: 'Live', statuses: ['in_progress'], empty: 'Nothing being played.' },
+  {
+    value: 'past',
+    title: 'Past',
+    statuses: ['completed', 'cancelled'],
+    empty: 'No finished or cancelled events yet.',
+  },
 ];
 
 export function OrgDashboardPage({
@@ -65,13 +77,17 @@ export function OrgDashboardPage({
   inviteAdminError,
   onRemoveAdmin,
   onRevokeInvite,
-  defaultTab = 'events',
+  defaultTab,
 }: OrgDashboardPageProps) {
   const createButton = (
     <Button asChild>
       <a href={createEventHref}>Create event</a>
     </Button>
   );
+
+  const byGroup = (group: Group) => events.filter((e) => group.statuses.includes(e.status));
+  const initialTab =
+    defaultTab ?? GROUPS.find((group) => byGroup(group).length > 0)?.value ?? 'drafts';
 
   return (
     <PageShell header={header}>
@@ -97,41 +113,44 @@ export function OrgDashboardPage({
         </div>
       </div>
 
-      <Tabs defaultValue={defaultTab}>
+      {eventsLoading || events.length === 0 ? (
+        <EventList
+          events={[]}
+          loading={eventsLoading}
+          hrefFor={eventManageHref}
+          now={now}
+          emptyTitle="No events yet"
+          emptyDescription="Create your first event. It starts as a draft only your admins can see, and you can edit it until registration opens."
+          emptyAction={createButton}
+        />
+      ) : null}
+
+      <Tabs defaultValue={initialTab}>
         <TabsList>
-          <TabsTrigger value="events">Events</TabsTrigger>
+          {GROUPS.map((group) => (
+            <TabsTrigger key={group.value} value={group.value}>
+              {group.title}
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {byGroup(group).length}
+              </span>
+            </TabsTrigger>
+          ))}
           <TabsTrigger value="admins">
             Admins
             <span className="text-xs text-muted-foreground tabular-nums">{admins.length}</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="events" className="grid gap-8">
-          {eventsLoading || events.length === 0 ? (
+        {GROUPS.map((group) => (
+          <TabsContent key={group.value} value={group.value}>
             <EventList
-              events={[]}
-              loading={eventsLoading}
+              events={byGroup(group)}
               hrefFor={eventManageHref}
               now={now}
-              emptyTitle="No events yet"
-              emptyDescription="Create your first event. It starts as a draft only your admins can see, and you can edit it until registration opens."
-              emptyAction={createButton}
+              emptyTitle={group.empty}
             />
-          ) : (
-            GROUPS.map((group) => {
-              const inGroup = events.filter((e) => group.statuses.includes(e.status));
-              if (inGroup.length === 0) return null;
-              return (
-                <section key={group.title} className="grid gap-3">
-                  <h2 className="text-sm font-semibold text-muted-foreground">
-                    {group.title} <span className="tabular-nums">({inGroup.length})</span>
-                  </h2>
-                  <EventList events={inGroup} hrefFor={eventManageHref} now={now} />
-                </section>
-              );
-            })
-          )}
-        </TabsContent>
+          </TabsContent>
+        ))}
 
         <TabsContent value="admins">
           <AdminList
