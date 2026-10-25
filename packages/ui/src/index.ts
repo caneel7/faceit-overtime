@@ -102,3 +102,16 @@ export { EventAdminPage } from './pages/event/event-admin-page';
 export { EventFormPage } from './pages/event/event-form-page';
 export { EventPage } from './pages/event/event-page';
 export { EventsPage } from './pages/event/events-page';
+export { AdminList } from './blocks/org/admin-list';
+export { InviteAdminDialog, type InviteAdminError } from './blocks/org/invite-admin-dialog';
+export { OrgHeader } from './blocks/org/org-header';
+export { RegisterOrgForm, type SlugStatus } from './blocks/org/register-org-form';
+export {
+  AccountAndOrgFields,
+  OrgFields,
+  slugify,
+  type RegisterOrgValues,
+} from './blocks/org/register-org-form.schema';
+export { OrgDashboardPage } from './pages/org/org-dashboard-page';
+export { OrgPublicPage } from './pages/org/org-public-page';
+export { RegisterOrgPage } from './pages/org/register-org-page';
