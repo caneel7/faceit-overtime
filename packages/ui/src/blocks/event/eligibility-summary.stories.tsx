@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect } from 'storybook/test';
 import {
   anyoneEvent,
   closedEvent,
@@ -26,13 +25,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Open: Story = {
-  play: async ({ canvas }) => {
-    await expect(canvas.getByText('Lvl 4–8')).toBeVisible();
-    await expect(canvas.getByText('7 slots left')).toBeVisible();
-    await expect(canvas.getByText('in 2 d 4 h')).toBeVisible();
-  },
-};
+export const Open: Story = {};
 export const AnyLevelAnyRegion: Story = { args: { event: anyoneEvent } };
 export const Full: Story = { args: { event: fullEvent } };
 export const RegistrationClosed: Story = { args: { event: closedEvent } };

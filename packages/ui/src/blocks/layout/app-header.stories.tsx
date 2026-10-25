@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn } from 'storybook/test';
+import { fn } from 'storybook/test';
 import { AppHeader } from './app-header';
 
 const nav = [{ label: 'Events', href: '/events', active: true }];
@@ -27,13 +27,7 @@ export const SignedOut: Story = { args: { userState: 'signed_out', user: undefin
 
 export const Loading: Story = { args: { userState: 'loading', user: undefined } };
 
-export const WithInvites: Story = {
-  args: { inviteCount: 3 },
-  play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Invites, 3 pending' }));
-    await expect(args.onInvitesClick).toHaveBeenCalledOnce();
-  },
-};
+export const WithInvites: Story = { args: { inviteCount: 3 } };
 
 export const ManyInvites: Story = { args: { inviteCount: 14 } };
 

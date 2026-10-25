@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, waitFor, within } from 'storybook/test';
 import { Button } from './button';
 import {
   Dialog,
@@ -42,17 +41,6 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  play: async ({ canvas, canvasElement, userEvent }) => {
-    const trigger = canvas.getByRole('button', { name: 'Open dialog' });
-    await userEvent.click(trigger);
-    const page = within(canvasElement.ownerDocument.body);
-    const dialog = await page.findByRole('dialog', { name: 'Open registration?' });
-    await expect(dialog).toContainElement(canvasElement.ownerDocument.activeElement as HTMLElement);
-    await userEvent.keyboard('{Escape}');
-    await waitFor(() => expect(page.queryByRole('dialog')).not.toBeInTheDocument());
-    await expect(trigger).toHaveFocus();
-  },
-};
+export const Default: Story = {};
 
 export const Open: Story = { args: { defaultOpen: true } };

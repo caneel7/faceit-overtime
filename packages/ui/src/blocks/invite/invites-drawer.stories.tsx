@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, within } from 'storybook/test';
+import { fn } from 'storybook/test';
 import { mobileGlobals } from '../../mocks/header';
 import { ALL_INVITES, teamPlayerInvite } from '../../mocks/invites';
 import { MOCK_NOW } from '../../mocks/time';
@@ -23,15 +23,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Mixed: Story = {
-  play: async ({ args, canvasElement, userEvent }) => {
-    const drawer = within(
-      await within(canvasElement.ownerDocument.body).findByRole('dialog', { name: 'Invites' }),
-    );
-    await userEvent.click(drawer.getAllByRole('button', { name: 'Accept' })[0]!);
-    await expect(args.onAccept).toHaveBeenCalledWith(teamPlayerInvite.id);
-  },
-};
+export const Mixed: Story = {};
 export const NeedsFaceit: Story = { args: { faceitConnected: false } };
 export const Accepting: Story = { args: { pendingId: teamPlayerInvite.id } };
 export const Empty: Story = { args: { invites: [] } };

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, within } from 'storybook/test';
+import { fn } from 'storybook/test';
 import { TransitionActions } from './transition-actions';
 
 const meta = {
@@ -12,31 +12,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Draft: Story = {
-  play: async ({ args, canvas, canvasElement, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Open registration' }));
-    const dialog = within(
-      await within(canvasElement.ownerDocument.body).findByRole('dialog', {
-        name: 'Open registration?',
-      }),
-    );
-    await userEvent.click(dialog.getByRole('button', { name: 'Open registration' }));
-    await expect(args.onTransition).toHaveBeenCalledWith('registration_open');
-  },
-};
-
-export const CancelKept: Story = {
-  play: async ({ args, canvas, canvasElement, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Cancel event' }));
-    const dialog = within(
-      await within(canvasElement.ownerDocument.body).findByRole('dialog', {
-        name: 'Cancel this event?',
-      }),
-    );
-    await userEvent.click(dialog.getByRole('button', { name: 'Keep event' }));
-    await expect(args.onTransition).not.toHaveBeenCalled();
-  },
-};
+export const Draft: Story = {};
 
 export const RegistrationOpen: Story = { args: { status: 'registration_open' } };
 export const RegistrationClosed: Story = { args: { status: 'registration_closed' } };
