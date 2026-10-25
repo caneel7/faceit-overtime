@@ -1,17 +1,17 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import { ForgotPasswordRequest } from '@overtime/shared';
-import type { FormEvent } from 'react';
+import { useForm } from 'react-hook-form';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Button } from '../ui/button';
 import { CheckEmailNotice } from './check-email-notice';
 import { FIELD_MESSAGES } from './field-errors';
 import { FormField } from './form-field';
 import { RATE_LIMITED } from './messages';
-import { useFieldValidation } from './use-field-validation';
 
 type ForgotPasswordFormProps = {
-  onSubmit: (values: { email: string }) => void;
+  onSubmit: (values: ForgotPasswordRequest) => void;
   pending?: boolean;
   sentTo?: string;
   error?: 'rate_limited';
@@ -23,27 +23,20 @@ export function ForgotPasswordForm({
   sentTo,
   error,
 }: ForgotPasswordFormProps) {
-  const { errors, setErrors, field } = useFieldValidation<'email'>({
-    email: { schema: ForgotPasswordRequest.shape.email, message: FIELD_MESSAGES.email },
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ForgotPasswordRequest>({
+    resolver: zodResolver(ForgotPasswordRequest),
+    mode: 'onTouched',
+    defaultValues: { email: '' },
   });
 
   if (sentTo) return <CheckEmailNotice email={sentTo} kind="reset" />;
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const parsed = ForgotPasswordRequest.safeParse({
-      email: String(new FormData(event.currentTarget).get('email') ?? ''),
-    });
-    if (!parsed.success) {
-      setErrors({ email: FIELD_MESSAGES.email });
-      return;
-    }
-    setErrors({});
-    onSubmit(parsed.data);
-  }
-
   return (
-    <form className="grid gap-4" onSubmit={handleSubmit} noValidate>
+    <form className="grid gap-4" onSubmit={handleSubmit((values) => onSubmit(values))} noValidate>
       {error === 'rate_limited' ? (
         <Alert variant="destructive">
           <AlertTitle>{RATE_LIMITED.title}</AlertTitle>
@@ -52,12 +45,11 @@ export function ForgotPasswordForm({
       ) : null}
       <FormField
         id="forgot-email"
-        name="email"
         type="email"
         label="Email"
         autoComplete="email"
-        {...field('email')}
-        error={errors.email}
+        {...register('email')}
+        error={errors.email ? FIELD_MESSAGES.email : undefined}
         disabled={pending}
       />
       <Button type="submit" className="w-full" disabled={pending}>

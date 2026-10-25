@@ -1,16 +1,16 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import { LoginRequest } from '@overtime/shared';
-import type { FormEvent } from 'react';
+import { useForm } from 'react-hook-form';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Button } from '../ui/button';
 import { Separator } from '../ui/separator';
-import { FIELD_MESSAGES, fieldErrors } from './field-errors';
+import { FIELD_MESSAGES } from './field-errors';
 import { FormField } from './form-field';
 import { SIGN_IN_ERRORS, type SignInError } from './messages';
-import { useFieldValidation } from './use-field-validation';
 
-export type SignInValues = { email: string; password: string };
+export type SignInValues = LoginRequest;
 
 type SignInFormProps = {
   onSubmit: (values: SignInValues) => void;
@@ -31,29 +31,15 @@ export function SignInForm({
   onResendVerification,
   resendPending = false,
 }: SignInFormProps) {
-  const { errors, setErrors, field } = useFieldValidation<'email' | 'password'>({
-    email: { schema: LoginRequest.shape.email, message: FIELD_MESSAGES.email },
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignInValues>({
+    resolver: zodResolver(LoginRequest),
+    mode: 'onTouched',
+    defaultValues: { email: '', password: '' },
   });
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    const parsed = LoginRequest.safeParse({
-      email: String(data.get('email') ?? ''),
-      password: String(data.get('password') ?? ''),
-    });
-    if (!parsed.success) {
-      setErrors(
-        fieldErrors(parsed.error, {
-          email: FIELD_MESSAGES.email,
-          password: FIELD_MESSAGES.currentPassword,
-        }),
-      );
-      return;
-    }
-    setErrors({});
-    onSubmit(parsed.data);
-  }
 
   const message = error ? SIGN_IN_ERRORS[error] : null;
 
@@ -85,25 +71,23 @@ export function SignInForm({
 
       <Separator label="or" />
 
-      <form className="grid gap-4" onSubmit={handleSubmit} noValidate>
+      <form className="grid gap-4" onSubmit={handleSubmit((values) => onSubmit(values))} noValidate>
         <FormField
           id="signin-email"
-          name="email"
           type="email"
           label="Email"
           autoComplete="email"
-          {...field('email')}
-          error={errors.email}
+          {...register('email')}
+          error={errors.email ? FIELD_MESSAGES.email : undefined}
           disabled={pending}
         />
         <FormField
           id="signin-password"
-          name="password"
           type="password"
           label="Password"
           autoComplete="current-password"
-          {...field('password')}
-          error={errors.password}
+          {...register('password')}
+          error={errors.password ? FIELD_MESSAGES.currentPassword : undefined}
           disabled={pending}
         />
         <div className="flex justify-end">

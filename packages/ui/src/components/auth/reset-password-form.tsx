@@ -1,15 +1,18 @@
 'use client';
 
-import { Password } from '@overtime/shared';
-import type { FormEvent } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Password, z } from '@overtime/shared';
+import { useForm } from 'react-hook-form';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Button } from '../ui/button';
 import { FIELD_MESSAGES } from './field-errors';
 import { FormField } from './form-field';
-import { useFieldValidation } from './use-field-validation';
+
+const NewPassword = z.object({ password: Password });
+type NewPassword = z.infer<typeof NewPassword>;
 
 type ResetPasswordFormProps = {
-  onSubmit: (values: { password: string }) => void;
+  onSubmit: (values: NewPassword) => void;
   forgotPasswordHref: string;
   pending?: boolean;
   error?: 'invalid_token';
@@ -21,8 +24,14 @@ export function ResetPasswordForm({
   pending = false,
   error,
 }: ResetPasswordFormProps) {
-  const { errors, setErrors, field } = useFieldValidation<'password'>({
-    password: { schema: Password, message: FIELD_MESSAGES.password },
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<NewPassword>({
+    resolver: zodResolver(NewPassword),
+    mode: 'onTouched',
+    defaultValues: { password: '' },
   });
 
   if (error === 'invalid_token') {
@@ -41,30 +50,16 @@ export function ResetPasswordForm({
     );
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const parsed = Password.safeParse(
-      String(new FormData(event.currentTarget).get('password') ?? ''),
-    );
-    if (!parsed.success) {
-      setErrors({ password: FIELD_MESSAGES.password });
-      return;
-    }
-    setErrors({});
-    onSubmit({ password: parsed.data });
-  }
-
   return (
-    <form className="grid gap-4" onSubmit={handleSubmit} noValidate>
+    <form className="grid gap-4" onSubmit={handleSubmit((values) => onSubmit(values))} noValidate>
       <FormField
         id="reset-password"
-        name="password"
         type="password"
         label="New password"
         autoComplete="new-password"
-        {...field('password')}
         hint="At least 10 characters. You'll be signed out everywhere else."
-        error={errors.password}
+        {...register('password')}
+        error={errors.password ? FIELD_MESSAGES.password : undefined}
         disabled={pending}
       />
       <Button type="submit" className="w-full" disabled={pending}>

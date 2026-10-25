@@ -1,15 +1,15 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import { RegisterRequest } from '@overtime/shared';
-import type { FormEvent } from 'react';
+import { useForm } from 'react-hook-form';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Button } from '../ui/button';
-import { FIELD_MESSAGES, fieldErrors, type FieldErrors } from './field-errors';
+import { FIELD_MESSAGES, type FieldErrors } from './field-errors';
 import { FormField } from './form-field';
 import { RATE_LIMITED } from './messages';
-import { useFieldValidation } from './use-field-validation';
 
-export type SignUpValues = { email: string; password: string; displayName: string };
+export type SignUpValues = RegisterRequest;
 export type EmailStatus = 'unknown' | 'checking' | 'available' | 'taken';
 type Field = keyof SignUpValues;
 
@@ -29,42 +29,30 @@ export function SignUpForm({
   emailStatus = 'unknown',
   signInHref,
   pending = false,
-  fieldErrors: serverErrors,
+  fieldErrors: serverErrors = {},
   error,
 }: SignUpFormProps) {
-  const { errors, setErrors, field } = useFieldValidation<Field>({
-    displayName: { schema: RegisterRequest.shape.displayName, message: FIELD_MESSAGES.displayName },
-    email: { schema: RegisterRequest.shape.email, message: FIELD_MESSAGES.email },
-    password: { schema: RegisterRequest.shape.password, message: FIELD_MESSAGES.password },
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignUpValues>({
+    resolver: zodResolver(RegisterRequest),
+    mode: 'onTouched',
+    defaultValues: { displayName: '', email: '', password: '' },
   });
-  const shown = { ...serverErrors, ...errors };
   const taken = emailStatus === 'taken';
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    const parsed = RegisterRequest.safeParse({
-      displayName: String(data.get('displayName') ?? ''),
-      email: String(data.get('email') ?? ''),
-      password: String(data.get('password') ?? ''),
-    });
-    if (!parsed.success) {
-      setErrors(
-        fieldErrors(parsed.error, {
-          displayName: FIELD_MESSAGES.displayName,
-          email: FIELD_MESSAGES.email,
-          password: FIELD_MESSAGES.password,
-        }),
-      );
-      return;
-    }
-    setErrors({});
-    if (taken) return;
-    onSubmit(parsed.data);
-  }
+  const message = (field: Field) => (errors[field] ? FIELD_MESSAGES[field] : serverErrors[field]);
 
   return (
-    <form className="grid gap-4" onSubmit={handleSubmit} noValidate>
+    <form
+      className="grid gap-4"
+      onSubmit={handleSubmit((values) => {
+        if (!taken) onSubmit(values);
+      })}
+      noValidate
+    >
       {error === 'rate_limited' ? (
         <Alert variant="destructive">
           <AlertTitle>{RATE_LIMITED.title}</AlertTitle>
@@ -73,24 +61,27 @@ export function SignUpForm({
       ) : null}
       <FormField
         id="signup-name"
-        name="displayName"
         label="Display name"
         autoComplete="nickname"
-        {...field('displayName')}
         hint="Shown to other organisers and players."
-        error={shown.displayName}
+        {...register('displayName')}
+        error={message('displayName')}
         disabled={pending}
       />
       <FormField
         id="signup-email"
-        name="email"
         type="email"
         label="Email"
         autoComplete="email"
-        {...field('email', onEmailBlur)}
+        {...register('email', {
+          onBlur: (event: { target: { value: string } }) => {
+            const parsed = RegisterRequest.shape.email.safeParse(event.target.value);
+            if (parsed.success) onEmailBlur?.(parsed.data);
+          },
+        })}
         hint={emailStatus === 'checking' ? 'Checking…' : undefined}
         error={
-          shown.email ??
+          message('email') ??
           (taken ? (
             <>
               This email already has an account.{' '}
@@ -104,13 +95,12 @@ export function SignUpForm({
       />
       <FormField
         id="signup-password"
-        name="password"
         type="password"
         label="Password"
         autoComplete="new-password"
-        {...field('password')}
         hint="At least 10 characters. A few words work well."
-        error={shown.password}
+        {...register('password')}
+        error={message('password')}
         disabled={pending}
       />
       <Button type="submit" className="w-full" disabled={pending || taken}>
