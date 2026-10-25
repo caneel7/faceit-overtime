@@ -1,6 +1,7 @@
 import {
   EmailAvailabilityQuery,
   EmailAvailabilityResponse,
+  FaceitLinkResponse,
   ForgotPasswordRequest,
   ForgotPasswordResponse,
   LoginRequest,
@@ -12,6 +13,7 @@ import {
   ResendVerificationResponse,
   ResetPasswordRequest,
   ResetPasswordResponse,
+  safeNext,
   VerifyEmailRequest,
   VerifyEmailResponse,
 } from '@overtime/shared';
@@ -24,10 +26,19 @@ import {
 } from '@overtime/shared/hono';
 import { Hono, type Context } from 'hono';
 import type { AppEnv } from '../../env';
-import { clearSessionCookies, COOKIE, readCookie, setSessionCookies } from '../../lib/cookies';
+import {
+  clearOAuthCookie,
+  clearSessionCookies,
+  COOKIE,
+  readCookie,
+  setOAuthCookie,
+  setSessionCookies,
+} from '../../lib/cookies';
+import { currentAuth, requireLiveSession } from '../../middleware/auth';
 import { clientIp, limit } from '../../middleware/rate-limit';
 import { QueueService } from '../../queues/queue-service';
 import { unauthenticated } from '../me/service';
+import { completeFaceit, startFaceit } from './faceit-service';
 import {
   emailHmac,
   forgotPassword,
@@ -253,5 +264,72 @@ export const auth = new Hono<AppEnv>()
       if (token) await revokeByRefreshToken(c.var.db, token, 'logout');
       clearSessionCookies(c);
       return c.body(null, 204);
+    },
+  )
+  .get(
+    '/faceit/start',
+    describeRoute({
+      tags: ['auth'],
+      summary: 'Start FACEIT sign-in',
+      description:
+        'Redirects to FACEIT with PKCE and a signed `ot_oauth` state cookie. `next` must be a same-origin path.',
+      responses: { 302: { description: 'Redirect to FACEIT' } },
+    }),
+    async (c) => {
+      const { url, stateCookie } = await startFaceit(c.env, {
+        next: safeNext(c.req.query('next')),
+        intent: 'sign_in',
+      });
+      setOAuthCookie(c, stateCookie);
+      return c.redirect(url, 302);
+    },
+  )
+  .post(
+    '/faceit/link',
+    describeRoute({
+      tags: ['auth'],
+      summary: 'Start connecting FACEIT to the signed-in account',
+      description:
+        'Returns the FACEIT URL to navigate to and sets the `ot_oauth` state cookie bound to this user.',
+      security: [{ bearerAuth: [] }],
+      responses: {
+        200: jsonContent(FaceitLinkResponse, 'FACEIT authorize URL'),
+        ...errorResponses('UNAUTHENTICATED'),
+      },
+    }),
+    requireLiveSession,
+    async (c) => {
+      const { url, stateCookie } = await startFaceit(c.env, {
+        next: '/settings',
+        intent: 'link',
+        sub: currentAuth(c).userId,
+      });
+      setOAuthCookie(c, stateCookie);
+      return respond(c, FaceitLinkResponse, { url });
+    },
+  )
+  .get(
+    '/faceit/callback',
+    describeRoute({
+      tags: ['auth'],
+      summary: 'FACEIT OAuth callback',
+      description:
+        'Signs in (sets session cookies) or connects FACEIT, then redirects into the app. Errors redirect with `?error=`.',
+      responses: { 302: { description: 'Redirect into the app' } },
+    }),
+    async (c) => {
+      const result = await completeFaceit(c.var.db, c.env, {
+        query: {
+          code: c.req.query('code'),
+          state: c.req.query('state'),
+          error: c.req.query('error'),
+        },
+        stateCookie: readCookie(c, COOKIE.oauth),
+        refreshToken: readCookie(c, COOKIE.refresh),
+        client: client(c),
+      });
+      clearOAuthCookie(c);
+      if (result.refreshToken) setSessionCookies(c, result.refreshToken);
+      return c.redirect(result.location, 302);
     },
   );

@@ -30,7 +30,7 @@ export function refreshSession(): Promise<boolean> {
   return refreshing;
 }
 
-export async function authFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+async function authFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const send = (token: string | null) => {
     const headers = new Headers(init?.headers);
     if (token) headers.set('authorization', `Bearer ${token}`);

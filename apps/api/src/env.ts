@@ -10,6 +10,7 @@ export type Bindings = {
   EMAIL_FROM_NAME: string;
   MAILER: 'resend' | 'zeptomail';
   ZEPTOMAIL_URL: string;
+  FACEIT_CLIENT_ID: string;
   HYPERDRIVE: { connectionString: string };
   DB_PING_TIMEOUT_MS?: string;
   AUTH_QUEUE: { send(body: unknown): Promise<void> };
@@ -21,6 +22,8 @@ export type Bindings = {
   PII_HMAC_KEY: string;
   RESEND_API_KEY: string;
   ZEPTOMAIL_TOKEN: string;
+  FACEIT_CLIENT_SECRET: string;
+  FACEIT_API_KEY: string;
 };
 
 export type Auth = { userId: string; sessionId: string; amr: AuthMethod[] };

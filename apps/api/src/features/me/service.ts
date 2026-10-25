@@ -1,10 +1,20 @@
-import { NotFoundError, players, userIdentities, users, type DbClient } from '@overtime/db';
-import type { MeResponse } from '@overtime/shared';
+import {
+  createDbClient,
+  NotFoundError,
+  players,
+  userIdentities,
+  users,
+  type DbClient,
+} from '@overtime/db';
+import type { MeResponse, Player } from '@overtime/shared';
 import { AppError } from '@overtime/shared/hono';
 import type { Bindings } from '../../env';
+import { FaceitClient } from '../../faceit/client';
+import { upsertPlayer } from '../../faceit/players';
 import { decrypt } from '../../lib/crypto';
 
 export const EMAIL_AAD = 'users.email';
+export const PLAYER_STALE_MS = 24 * 60 * 60 * 1000;
 
 export function unauthenticated(): AppError {
   return new AppError('UNAUTHENTICATED', 401, 'Sign in to continue');
@@ -58,4 +68,29 @@ export async function loadMe(db: DbClient, env: Bindings, userId: string): Promi
         }
       : null,
   };
+}
+
+export function playerIsStale(player: Player): boolean {
+  return Date.now() - Date.parse(player.syncedAt) > PLAYER_STALE_MS;
+}
+
+export async function refreshPlayer(env: Bindings, faceitPlayerId: string): Promise<void> {
+  try {
+    const stats = await FaceitClient.fromEnv(env).player(faceitPlayerId);
+    if (!stats) return;
+    const db = createDbClient(env.HYPERDRIVE.connectionString);
+    try {
+      await upsertPlayer(db, stats, stats);
+    } finally {
+      await db.close();
+    }
+  } catch (err) {
+    console.error(
+      JSON.stringify({
+        level: 'error',
+        event: 'faceit_data_failed',
+        error: err instanceof Error ? err.message : String(err),
+      }),
+    );
+  }
 }

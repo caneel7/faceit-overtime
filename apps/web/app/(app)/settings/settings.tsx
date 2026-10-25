@@ -3,7 +3,7 @@
 import { FaceitLinkResponse, MeResponse } from '@overtime/shared';
 import { AccountDetails, ConnectedAccounts, type ConnectError } from '@overtime/ui';
 import { useEffect, useState } from 'react';
-import { api, authFetch } from '../../../lib/api-client';
+import { api } from '../../../lib/api-client';
 import { useSessionStore } from '../../../lib/session-store';
 
 export function Settings({
@@ -30,7 +30,7 @@ export function Settings({
   async function handleConnect() {
     setConnectPending(true);
     setError(undefined);
-    const res = await authFetch('/api/auth/faceit/link', { method: 'POST' }).catch(() => null);
+    const res = await api.api.auth.faceit.link.$post().catch(() => null);
     const link = res?.ok ? FaceitLinkResponse.safeParse(await res.json()) : null;
     if (link?.success) {
       window.location.assign(link.data.url);

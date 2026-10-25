@@ -14,6 +14,7 @@
     "EMAIL_FROM_NAME": "Overtime",
     "MAILER": "resend",
     "ZEPTOMAIL_URL": "https://api.zeptomail.com/v1.1/email",
+    "FACEIT_CLIENT_ID": "4e8e97c7-0d89-4090-b13c-33b0b460310c",
   },
   "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "3987155b86df403695621cc4d1bb2d11" }],
   "ratelimits": [
@@ -45,6 +46,7 @@
         "EMAIL_FROM_NAME": "Overtime",
         "MAILER": "resend",
         "ZEPTOMAIL_URL": "https://api.zeptomail.com/v1.1/email",
+        "FACEIT_CLIENT_ID": "abae713c-d5ed-4f18-a8f4-d1783089e2ba",
       },
       "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "3987155b86df403695621cc4d1bb2d11" }],
       "ratelimits": [

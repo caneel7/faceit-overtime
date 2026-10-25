@@ -97,12 +97,6 @@ export type ResetPasswordRequest = z.infer<typeof ResetPasswordRequest>;
 export const ResetPasswordResponse = SessionResponse;
 export type ResetPasswordResponse = z.infer<typeof ResetPasswordResponse>;
 
-export const DevLoginRequest = z.object({ nickname: z.string().trim().min(1).max(64) });
-export type DevLoginRequest = z.infer<typeof DevLoginRequest>;
-
-export const DevLoginResponse = SessionResponse;
-export type DevLoginResponse = z.infer<typeof DevLoginResponse>;
-
 export const RefreshResponse = SessionResponse;
 export type RefreshResponse = z.infer<typeof RefreshResponse>;
 

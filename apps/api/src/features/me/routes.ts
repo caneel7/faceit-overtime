@@ -3,7 +3,7 @@ import { describeRoute, errorResponses, jsonContent, respond } from '@overtime/s
 import { Hono } from 'hono';
 import type { AppEnv } from '../../env';
 import { currentAuth, requireAuth } from '../../middleware/auth';
-import { loadMe } from './service';
+import { loadMe, playerIsStale, refreshPlayer } from './service';
 
 export const me = new Hono<AppEnv>().get(
   '/',
@@ -17,5 +17,11 @@ export const me = new Hono<AppEnv>().get(
     },
   }),
   requireAuth,
-  async (c) => respond(c, MeResponse, await loadMe(c.var.db, c.env, currentAuth(c).userId)),
+  async (c) => {
+    const me = await loadMe(c.var.db, c.env, currentAuth(c).userId);
+    if (me.player && playerIsStale(me.player)) {
+      c.executionCtx.waitUntil(refreshPlayer(c.env, me.player.faceitPlayerId));
+    }
+    return respond(c, MeResponse, me);
+  },
 );
