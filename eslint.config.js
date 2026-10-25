@@ -47,6 +47,21 @@ const serverOnlyForClients = {
   ],
 };
 
+const UI = 'packages/ui/src';
+const NO_MOCKS = { regex: '(^|/)mocks(/|$)', message: 'Mock data is only for stories.' };
+const NO_PAGES = {
+  regex: '(^|/)pages(/|$)',
+  message: 'Pages compose blocks, never the other way round.',
+};
+const NO_BLOCKS = { regex: '(^|/)blocks(/|$)', message: 'Primitives know nothing about features.' };
+
+function uiImports(...patterns) {
+  return [
+    'error',
+    { ...serverOnlyForClients, patterns: [...serverOnlyForClients.patterns, ...patterns] },
+  ];
+}
+
 export default defineConfig([
   globalIgnores([
     '**/node_modules/',
@@ -120,6 +135,22 @@ export default defineConfig([
         })),
       ],
     },
+  },
+
+  {
+    files: [`${UI}/**/*.{ts,tsx}`],
+    ignores: ['**/*.stories.tsx', `${UI}/mocks/**`],
+    rules: { 'no-restricted-imports': uiImports(NO_MOCKS) },
+  },
+  {
+    files: [`${UI}/blocks/**/*.{ts,tsx}`],
+    ignores: ['**/*.stories.tsx'],
+    rules: { 'no-restricted-imports': uiImports(NO_MOCKS, NO_PAGES) },
+  },
+  {
+    files: [`${UI}/primitives/**/*.{ts,tsx}`],
+    ignores: ['**/*.stories.tsx'],
+    rules: { 'no-restricted-imports': uiImports(NO_MOCKS, NO_PAGES, NO_BLOCKS) },
   },
 
   {
