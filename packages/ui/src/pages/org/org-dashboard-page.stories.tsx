@@ -4,7 +4,7 @@ import { fn } from 'storybook/test';
 import { ADMINS, owner, PENDING_ADMINS } from '../../mocks/admins';
 import { ORG_EVENTS } from '../../mocks/events';
 import { mobileGlobals, mockHeader, pageParameters } from '../../mocks/header';
-import { uniEsportsClub } from '../../mocks/orgs';
+import { MY_ORGS, uniEsportsClub } from '../../mocks/orgs';
 import { MOCK_NOW } from '../../mocks/time';
 import { OrgDashboardPage } from './org-dashboard-page';
 
@@ -31,9 +31,13 @@ const meta = {
   parameters: pageParameters,
   render: (args) => <Interactive {...args} />,
   args: {
-    header: mockHeader({ active: 'organizations' }),
+    header: mockHeader(),
     org: uniEsportsClub,
     viewerRole: 'owner',
+    myOrgs: MY_ORGS,
+    orgHref: (slug: string) => `/o/${slug}/manage`,
+    allOrgsHref: '/orgs',
+    registerOrgHref: '/organizations/new',
     now: MOCK_NOW,
     events: ORG_EVENTS,
     eventManageHref: (id: string) => `/event/${id}/manage`,

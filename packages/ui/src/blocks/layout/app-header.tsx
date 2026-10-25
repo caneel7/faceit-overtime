@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../../primitives/dropdown-menu';
-import { MenuIcon } from '../../primitives/icons';
+import { BellIcon, MenuIcon } from '../../primitives/icons';
 import { UserMenu, type UserMenuUser } from '../auth/user-menu';
 
 export type NavItem = { label: string; href: string; active?: boolean };
@@ -19,7 +19,7 @@ type AppHeaderProps = {
   userState: 'loading' | 'signed_out' | 'signed_in';
   user?: UserMenuUser;
   inviteCount?: number;
-  invitesHref?: string;
+  onInvitesClick?: () => void;
   signInHref: string;
   onSignOut: () => void;
 };
@@ -30,7 +30,7 @@ export function AppHeader({
   userState,
   user,
   inviteCount = 0,
-  invitesHref = '/invites',
+  onInvitesClick,
   signInHref,
   onSignOut,
 }: AppHeaderProps) {
@@ -75,20 +75,24 @@ export function AppHeader({
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          {userState === 'signed_in' && inviteCount > 0 ? (
-            <a
-              href={invitesHref}
-              className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:text-foreground"
-              aria-label={`Invites, ${inviteCount} pending`}
+          {userState === 'signed_in' && onInvitesClick ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative"
+              onClick={onInvitesClick}
+              aria-label={inviteCount > 0 ? `Invites, ${inviteCount} pending` : 'Invites'}
             >
-              <span aria-hidden>Invites</span>
-              <span
-                aria-hidden
-                className="inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-foreground"
-              >
-                {inviteCount > 9 ? '9+' : inviteCount}
-              </span>
-            </a>
+              <BellIcon className="size-5" />
+              {inviteCount > 0 ? (
+                <span
+                  aria-hidden
+                  className="absolute -top-0.5 -right-0.5 inline-flex min-w-4.5 items-center justify-center rounded-full bg-primary px-1 text-[10px] leading-4.5 font-semibold text-primary-foreground"
+                >
+                  {inviteCount > 9 ? '9+' : inviteCount}
+                </span>
+              ) : null}
+            </Button>
           ) : null}
           <UserMenu state={userState} user={user} signInHref={signInHref} onSignOut={onSignOut} />
         </div>

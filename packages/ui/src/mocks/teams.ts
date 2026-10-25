@@ -93,6 +93,7 @@ export const MY_TEAMS: TeamSummary[] = [
     myRole: 'player',
     isCaptain: true,
     memberCount: 7,
+    avgElo: fullTeam.avgElo,
   },
   {
     id: coachLedTeam.id,
@@ -101,6 +102,16 @@ export const MY_TEAMS: TeamSummary[] = [
     myRole: 'coach',
     isCaptain: false,
     memberCount: 4,
+    avgElo: 1612,
+  },
+  {
+    id: '01930e00-0000-7000-8000-000000000005',
+    name: 'Sunday Mix',
+    tag: 'MIX',
+    myRole: 'player',
+    isCaptain: false,
+    memberCount: 2,
+    avgElo: null,
   },
 ];
 

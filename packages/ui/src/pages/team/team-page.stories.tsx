@@ -45,7 +45,7 @@ const meta = {
   parameters: pageParameters,
   render: (args) => <Interactive {...args} />,
   args: {
-    header: mockHeader({ active: 'teams' }),
+    header: mockHeader(),
     team: partialTeam,
     viewer: 'captain',
     viewerUserId: captain.userId,

@@ -23,9 +23,13 @@ export const SignedIn: Story = {
     await userEvent.keyboard('{Enter}');
     const page = within(canvasElement.ownerDocument.body);
     await waitFor(() => expect(page.getByRole('menu')).toBeVisible());
-    await expect(page.getByRole('menuitem', { name: 'Dashboard' })).toHaveAttribute(
+    await expect(page.getByRole('menuitem', { name: 'My teams' })).toHaveAttribute(
       'href',
-      '/dashboard',
+      '/teams',
+    );
+    await expect(page.getByRole('menuitem', { name: 'My organizations' })).toHaveAttribute(
+      'href',
+      '/orgs',
     );
     await expect(page.getByRole('menuitem', { name: 'Settings' })).toHaveAttribute(
       'href',

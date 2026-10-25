@@ -10,7 +10,7 @@ const meta = {
   component: EventFormPage,
   parameters: pageParameters,
   args: {
-    header: mockHeader({ active: 'organizations' }),
+    header: mockHeader(),
     org: uniEsportsClub,
     mode: 'create',
     onSubmit: fn(),

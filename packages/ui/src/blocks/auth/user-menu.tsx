@@ -24,7 +24,8 @@ type UserMenuProps = {
   state: 'loading' | 'signed_out' | 'signed_in';
   user?: UserMenuUser;
   signInHref: string;
-  dashboardHref?: string;
+  teamsHref?: string;
+  orgsHref?: string;
   settingsHref?: string;
   onSignOut: () => void;
 };
@@ -33,7 +34,8 @@ export function UserMenu({
   state,
   user,
   signInHref,
-  dashboardHref = '/dashboard',
+  teamsHref = '/teams',
+  orgsHref = '/orgs',
   settingsHref = '/settings',
   onSignOut,
 }: UserMenuProps) {
@@ -75,7 +77,10 @@ export function UserMenu({
         <DropdownMenuLabel className="truncate">{user.displayName}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <a href={dashboardHref}>Dashboard</a>
+          <a href={teamsHref}>My teams</a>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <a href={orgsHref}>My organizations</a>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <a href={settingsHref}>Settings</a>

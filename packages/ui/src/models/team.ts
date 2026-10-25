@@ -37,6 +37,7 @@ export type TeamSummary = {
   myRole: TeamRole;
   isCaptain: boolean;
   memberCount: number;
+  avgElo: number | null;
 };
 
 export type InviteCandidate = {

@@ -8,7 +8,7 @@ const meta = {
   component: CreateTeamPage,
   parameters: pageParameters,
   args: {
-    header: mockHeader({ active: 'teams' }),
+    header: mockHeader(),
     faceitConnected: true,
     connectFaceitHref: '/settings',
     onSubmit: fn(),

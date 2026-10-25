@@ -3,9 +3,9 @@ import { EventList } from '../../blocks/event/event-list';
 import { PageShell } from '../../blocks/layout/page-shell';
 import { AdminList } from '../../blocks/org/admin-list';
 import { InviteAdminDialog, type InviteAdminError } from '../../blocks/org/invite-admin-dialog';
-import { OrgHeader } from '../../blocks/org/org-header';
+import { OrgSwitcher } from '../../blocks/org/org-switcher';
 import type { EventStatus, EventSummary } from '../../models/event';
-import type { OrgAdmin, OrgPendingAdmin, OrgRole, OrgSummary } from '../../models/org';
+import type { MyOrg, OrgAdmin, OrgPendingAdmin, OrgRole, OrgSummary } from '../../models/org';
 import { Button } from '../../primitives/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../primitives/tabs';
 
@@ -13,6 +13,10 @@ type OrgDashboardPageProps = {
   header: ReactNode;
   org: OrgSummary;
   viewerRole: OrgRole;
+  myOrgs: MyOrg[];
+  orgHref: (slug: string) => string;
+  allOrgsHref: string;
+  registerOrgHref: string;
   now: string;
   events: EventSummary[];
   eventsLoading?: boolean;
@@ -42,6 +46,10 @@ export function OrgDashboardPage({
   header,
   org,
   viewerRole,
+  myOrgs,
+  orgHref,
+  allOrgsHref,
+  registerOrgHref,
   now,
   events,
   eventsLoading,
@@ -67,18 +75,27 @@ export function OrgDashboardPage({
 
   return (
     <PageShell header={header}>
-      <OrgHeader
-        org={org}
-        subtitle={viewerRole === 'owner' ? 'You own this organization' : 'You are an admin'}
-        actions={
-          <>
-            <Button asChild variant="outline">
-              <a href={publicHref}>View public page</a>
-            </Button>
-            {createButton}
-          </>
-        }
-      />
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="grid min-w-0 gap-1">
+          <h1 className="sr-only">{org.name}</h1>
+          <OrgSwitcher
+            current={org}
+            orgs={myOrgs}
+            orgHref={orgHref}
+            allOrgsHref={allOrgsHref}
+            registerOrgHref={registerOrgHref}
+          />
+          <p className="pl-1 text-sm text-muted-foreground">
+            {viewerRole === 'owner' ? 'You own this organization' : 'You are an admin'}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline">
+            <a href={publicHref}>View public page</a>
+          </Button>
+          {createButton}
+        </div>
+      </div>
 
       <Tabs defaultValue={defaultTab}>
         <TabsList>

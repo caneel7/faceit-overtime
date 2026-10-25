@@ -3,7 +3,7 @@ import {
   ActivateAccountForm,
   type ActivateAccountFormValues,
 } from '../../blocks/auth/activate-account-form';
-import { InviteCard } from '../../blocks/team/invite-card';
+import { InviteCard } from '../../blocks/invite/invite-card';
 import type { OrgInvite } from '../../models/invite';
 import { Alert, AlertDescription, AlertTitle } from '../../primitives/alert';
 import { Button } from '../../primitives/button';

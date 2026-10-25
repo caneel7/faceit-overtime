@@ -8,7 +8,7 @@ const meta = {
   component: RegisterOrgPage,
   parameters: pageParameters,
   args: {
-    header: mockHeader({ active: 'organizations', signedIn: false }),
+    header: mockHeader({ signedIn: false }),
     mode: 'signed_out',
     appOrigin: 'https://overtime.caneel.dev',
     onSubmit: fn(),
@@ -22,9 +22,9 @@ type Story = StoryObj<typeof meta>;
 
 export const SignedOut: Story = {};
 export const SignedIn: Story = {
-  args: { mode: 'signed_in', header: mockHeader({ active: 'organizations' }) },
+  args: { mode: 'signed_in', header: mockHeader() },
 };
 export const SlugTaken: Story = {
-  args: { mode: 'signed_in', header: mockHeader({ active: 'organizations' }), slugStatus: 'taken' },
+  args: { mode: 'signed_in', header: mockHeader(), slugStatus: 'taken' },
 };
 export const Mobile: Story = { globals: mobileGlobals };

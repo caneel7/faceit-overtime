@@ -11,7 +11,7 @@ import { MOCK_NOW } from '../../mocks/time';
 import { InviteCard } from './invite-card';
 
 const meta = {
-  title: 'Blocks/Team/InviteCard',
+  title: 'Blocks/Invite/InviteCard',
   component: InviteCard,
   args: {
     invite: teamPlayerInvite,

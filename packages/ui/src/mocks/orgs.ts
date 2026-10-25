@@ -12,7 +12,14 @@ export const nightOwlsLeague: OrgSummary = {
   name: 'Night Owls League',
 };
 
+export const campusClashSociety: OrgSummary = {
+  id: '01930a8e-0000-7000-8000-000000000003',
+  slug: 'campus-clash',
+  name: 'Campus Clash Society',
+};
+
 export const MY_ORGS: MyOrg[] = [
   { ...uniEsportsClub, role: 'owner' },
   { ...nightOwlsLeague, role: 'admin' },
+  { ...campusClashSociety, role: 'admin' },
 ];

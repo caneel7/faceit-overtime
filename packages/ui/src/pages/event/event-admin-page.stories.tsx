@@ -16,7 +16,7 @@ const meta = {
   component: EventAdminPage,
   parameters: pageParameters,
   args: {
-    header: mockHeader({ active: 'organizations' }),
+    header: mockHeader(),
     event: draftEvent,
     orgManageHref: '/o/uni-esports-club/manage',
     publicHref: `/event/${draftEvent.id}`,
