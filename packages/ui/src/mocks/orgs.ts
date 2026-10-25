@@ -1,4 +1,4 @@
-import type { OrgSummary } from '../models/org';
+import type { MyOrg, OrgSummary } from '../models/org';
 
 export const uniEsportsClub: OrgSummary = {
   id: '01930a8e-0000-7000-8000-000000000001',
@@ -11,3 +11,8 @@ export const nightOwlsLeague: OrgSummary = {
   slug: 'night-owls-league',
   name: 'Night Owls League',
 };
+
+export const MY_ORGS: MyOrg[] = [
+  { ...uniEsportsClub, role: 'owner' },
+  { ...nightOwlsLeague, role: 'admin' },
+];

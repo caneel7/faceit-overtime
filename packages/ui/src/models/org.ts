@@ -16,3 +16,5 @@ export type OrgPendingAdmin = {
   invitedAt: string;
   expiresAt: string;
 };
+
+export type MyOrg = OrgSummary & { role: OrgRole };

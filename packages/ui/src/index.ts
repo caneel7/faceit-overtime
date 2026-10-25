@@ -127,3 +127,19 @@ export { TeamSlots, slotsLeft, type SlotsLeft } from './blocks/team/team-slots';
 export { CreateTeamPage } from './pages/team/create-team-page';
 export { InvitesPage } from './pages/team/invites-page';
 export { TeamPage } from './pages/team/team-page';
+export {
+  ActivateAccountForm,
+  type ActivateAccountFormValues,
+} from './blocks/auth/activate-account-form';
+export { AddEmailForm } from './blocks/auth/add-email-form';
+export { ActivateAccountPage } from './pages/auth/activate-account-page';
+export {
+  AddEmailPage,
+  ForgotPasswordPage,
+  ResetPasswordPage,
+  SettingsPage,
+  SignInPage,
+  SignUpPage,
+  VerifyEmailPage,
+} from './pages/auth/auth-pages';
+export { DashboardPage } from './pages/dashboard/dashboard-page';
