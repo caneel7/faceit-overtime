@@ -38,3 +38,9 @@ export type TeamSummary = {
   isCaptain: boolean;
   memberCount: number;
 };
+
+export type InviteCandidate = {
+  userId: string;
+  displayName: string;
+  player: PlayerSummary | null;
+};

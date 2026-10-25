@@ -115,3 +115,15 @@ export {
 export { OrgDashboardPage } from './pages/org/org-dashboard-page';
 export { OrgPublicPage } from './pages/org/org-public-page';
 export { RegisterOrgPage } from './pages/org/register-org-page';
+export { CreateTeamForm } from './blocks/team/create-team-form';
+export { CreateTeamFormValues } from './blocks/team/create-team-form.schema';
+export { InviteCard } from './blocks/team/invite-card';
+export { InviteMemberDialog, type InviteMemberError } from './blocks/team/invite-member-dialog';
+export { MemberList, type TeamViewer } from './blocks/team/member-list';
+export { PendingInviteList } from './blocks/team/pending-invite-list';
+export { RoleBadge } from './blocks/team/role-badge';
+export { TeamHeader } from './blocks/team/team-header';
+export { TeamSlots, slotsLeft, type SlotsLeft } from './blocks/team/team-slots';
+export { CreateTeamPage } from './pages/team/create-team-page';
+export { InvitesPage } from './pages/team/invites-page';
+export { TeamPage } from './pages/team/team-page';
