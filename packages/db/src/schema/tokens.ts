@@ -16,6 +16,8 @@ export const userTokens = pgTable(
     expiresAt: timestamptz('expires_at').notNull(),
     usedAt: timestamptz('used_at'),
     ...timestamps(),
+    emailEncrypted: text('email_encrypted'),
+    emailHmac: text('email_hmac'),
   },
   (t) => [
     index('user_tokens_user_open_idx')

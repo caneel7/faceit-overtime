@@ -1,5 +1,6 @@
 import {
   and,
+  arrayContains,
   between,
   eq,
   getTableColumns,
@@ -16,6 +17,7 @@ import {
   ne,
   notInArray,
   or,
+  sql,
   type Column,
   type SQL,
 } from 'drizzle-orm';
@@ -120,5 +122,12 @@ function getCondition(table: PgTable, key: string, value: unknown): SQL {
       return isNull(column);
     case 'NOTNULL':
       return isNotNull(column);
+    case 'HAS':
+      if (column.columnType !== 'PgArray') fail('an array column');
+      if (!isScalar(value)) fail('a single non-null value');
+      return arrayContains(column, [value]);
+    case 'EMPTY':
+      if (column.columnType !== 'PgArray') fail('an array column');
+      return sql`cardinality(${column}) = 0`;
   }
 }

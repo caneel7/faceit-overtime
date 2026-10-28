@@ -1,9 +1,13 @@
 import type { Column, SQL } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import type {
+  orgs,
+  orgUsers,
   players,
-  teamPlayers,
+  teamInvites,
+  teamMembers,
   teams,
+  tournaments,
   trustedDevices,
   userIdentities,
   users,
@@ -12,14 +16,23 @@ import type {
   userTwoFactors,
 } from '../schema';
 
-export type GlobalTable = typeof players | typeof users | typeof teams | typeof teamPlayers;
+export type GlobalTable =
+  | typeof players
+  | typeof users
+  | typeof teams
+  | typeof orgs
+  | typeof teamMembers
+  | typeof teamInvites;
 export type UserTable =
   | typeof userSessions
   | typeof userTwoFactors
   | typeof trustedDevices
   | typeof userIdentities
-  | typeof userTokens;
-export type AnyTable = GlobalTable | UserTable;
+  | typeof userTokens
+  | typeof orgUsers;
+export type OrgTable = typeof tournaments | typeof orgUsers;
+export type PublishedTable = typeof orgs | typeof tournaments;
+export type AnyTable = GlobalTable | UserTable | OrgTable;
 
 export type Row<T extends PgTable> = T['$inferSelect'];
 export type Col<T extends PgTable> = keyof Row<T> & string;
@@ -59,6 +72,8 @@ export const OPERATORS = [
   'BETWEEN',
   'ISNULL',
   'NOTNULL',
+  'HAS',
+  'EMPTY',
 ] as const;
 export type Operator = (typeof OPERATORS)[number];
 
@@ -73,7 +88,9 @@ type Clause<T extends PgTable, R = object> = {
 } & {
   [K in Col<T> as `${K} BETWEEN`]?: readonly [Value<T, K>, Value<T, K>];
 } & {
-  [K in Col<T> as `${K} ${'ISNULL' | 'NOTNULL'}`]?: true;
+  [K in Col<T> as `${K} ${'ISNULL' | 'NOTNULL' | 'EMPTY'}`]?: true;
+} & {
+  [K in Col<T> as `${K} HAS`]?: string;
 } & {
   [K in keyof R as string extends K ? never : K]?: R[K] extends Relation<PgTable, infer Target>
     ? Clause<Target>
@@ -91,6 +108,7 @@ export type FindOpts<T extends PgTable, R, J extends JoinSpec<R>> = {
   limit?: number;
   offset?: number;
   withDeleted?: true;
+  lock?: 'update';
 };
 
 type Joined<R, J> = {

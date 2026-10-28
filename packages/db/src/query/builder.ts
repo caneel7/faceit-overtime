@@ -5,6 +5,7 @@ import {
   eq,
   getTableColumns,
   getTableName,
+  inArray,
   isNull,
   sql,
   type Column,
@@ -39,7 +40,9 @@ export type Executor = PgDatabase<PgQueryResultHKT, Record<string, never>>;
 
 export type ScopeConfig = {
   tables: ReadonlySet<PgTable>;
-  owner?: { column: string; value: string; tables: ReadonlySet<PgTable> };
+  owner?: { column: string; value: string | readonly string[]; tables: ReadonlySet<PgTable> };
+  filters?: ReadonlyMap<PgTable, (table: PgTable) => SQL>;
+  readOnly?: boolean;
 };
 
 type AnyRelation = Relation<PgTable>;
@@ -97,7 +100,25 @@ export class QueryBuilder<
     if (!owner || !owner.tables.has(table)) return undefined;
     const col = column(table, owner.column);
     if (!col) throw new QueryBuilderError(`${getTableName(table)} has no ${owner.column} column`);
-    return eq(col, owner.value);
+    return typeof owner.value === 'string' ? eq(col, owner.value) : inArray(col, owner.value);
+  }
+
+  #scopeCondition(table: PgTable): SQL | undefined {
+    return and(this.#ownerCondition(table), this.scope.filters?.get(table)?.(table));
+  }
+
+  #assertWritable() {
+    if (this.scope.readOnly)
+      throw new QueryBuilderError(`${this.#tableName} is read-only in this scope`);
+  }
+
+  #shouldLock(lock: 'update' | undefined, mode: 'rows' | 'page' | 'count'): boolean {
+    if (!lock) return false;
+    if (mode !== 'rows')
+      throw new QueryBuilderError('lock only works with find, findOne and getById');
+    if (this.scope.readOnly)
+      throw new QueryBuilderError(`${this.#tableName} can't be locked in a read-only scope`);
+    return true;
   }
 
   #notDeleted(table: PgTable): SQL | undefined {
@@ -106,7 +127,7 @@ export class QueryBuilder<
   }
 
   #guard(extra?: SQL): SQL | undefined {
-    return and(this.#ownerCondition(this.table), this.#notDeleted(this.table), extra);
+    return and(this.#scopeCondition(this.table), this.#notDeleted(this.table), extra);
   }
 
   #joins(spec: JoinSpec<R> | undefined): Join[] {
@@ -161,7 +182,7 @@ export class QueryBuilder<
       const on = and(
         eq(rel.field as Column, rel.reference),
         this.#notDeleted(rel.schema),
-        this.#ownerCondition(rel.schema),
+        this.#scopeCondition(rel.schema),
         rel.condition?.(rel.schema),
       );
       query = kind === 'inner' ? query.innerJoin(rel.schema, on!) : query.leftJoin(rel.schema, on!);
@@ -169,7 +190,7 @@ export class QueryBuilder<
 
     query = query.where(
       and(
-        this.#ownerCondition(this.table),
+        this.#scopeCondition(this.table),
         opts.withDeleted ? undefined : this.#notDeleted(this.table),
         opts.where === undefined ? undefined : this.#where(opts.where, joins),
       ),
@@ -181,6 +202,7 @@ export class QueryBuilder<
       if (opts.limit !== undefined) query = query.limit(opts.limit);
       if (opts.offset !== undefined) query = query.offset(opts.offset);
     }
+    if (this.#shouldLock(opts.lock, mode)) query = query.for('update', { of: table });
     return query;
   }
 
@@ -197,13 +219,15 @@ export class QueryBuilder<
     return row;
   }
 
-  async getById(id: string): Promise<Row<T>> {
+  async getById(id: string, opts: { lock?: 'update' } = {}): Promise<Row<T>> {
     const table: PgTable = this.table;
-    const [row] = await this.db
+    const query = this.db
       .select()
       .from(table)
       .where(this.#guard(eq(idColumn(this.table), id)))
       .limit(1);
+    const lock = this.#shouldLock(opts.lock, 'rows');
+    const [row] = await (lock ? query.for('update', { of: table }) : query);
     if (!row) throw new NotFoundError();
     return row as Row<T>;
   }
@@ -244,7 +268,11 @@ export class QueryBuilder<
     const row: Record<string, unknown> = { ...values };
     for (const key of SYSTEM_COLUMNS) delete row[key];
     const owner = this.scope.owner;
-    if (owner?.tables.has(this.table)) row[owner.column] = owner.value;
+    if (owner?.tables.has(this.table)) {
+      if (typeof owner.value !== 'string')
+        throw new QueryBuilderError(`Can't insert into ${this.#tableName} for several owners`);
+      row[owner.column] = owner.value;
+    }
     return row;
   }
 
@@ -269,6 +297,7 @@ export class QueryBuilder<
   }
 
   async insertMany(values: NewRow<T, ScopeCol>[]): Promise<Row<T>[]> {
+    this.#assertWritable();
     if (values.length === 0) throw new QueryBuilderError('insertMany needs at least one row');
     const rows = values.map((v) => this.#prepareInsert(v));
     return (await mapConflict(
@@ -283,6 +312,7 @@ export class QueryBuilder<
     values: NewRow<T, ScopeCol>,
     opts: { conflict: readonly Col<T>[]; set: Patch<T, ScopeCol> },
   ): Promise<Row<T>> {
+    this.#assertWritable();
     if (opts.conflict.length === 0) throw new QueryBuilderError('upsert needs conflict columns');
     const target = opts.conflict.map((name) => {
       const col = column(this.table, name);
@@ -299,7 +329,7 @@ export class QueryBuilder<
         target: target as never,
         targetWhere: deletedAt ? isNull(deletedAt) : undefined,
         set: set as never,
-        setWhere: this.#ownerCondition(this.table),
+        setWhere: this.#scopeCondition(this.table),
       })
       .returning();
     const [row] = (await mapConflict(query)) as Row<T>[];
@@ -328,6 +358,7 @@ export class QueryBuilder<
   }
 
   async #update(condition: SQL | undefined, values: Patch<T, ScopeCol>): Promise<Row<T>[]> {
+    this.#assertWritable();
     const patch = this.#preparePatch(values);
     const query = this.db
       .update(this.table)
@@ -338,6 +369,7 @@ export class QueryBuilder<
   }
 
   async #softDelete(condition: SQL | undefined): Promise<Row<T>[]> {
+    this.#assertWritable();
     if (!column(this.table, 'deletedAt'))
       throw new QueryBuilderError(`${this.#tableName} has no deletedAt column`);
     const query = this.db

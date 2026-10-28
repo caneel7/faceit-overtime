@@ -1,7 +1,7 @@
-import { isNull } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import { index, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { id, timestamps } from './columns';
-import { players } from './players';
+import { id, timestamps, timestamptz } from './columns';
+import { inviteStatus, teamRole } from './enums';
 import { users } from './users';
 
 export const teams = pgTable(
@@ -21,20 +21,48 @@ export const teams = pgTable(
   (t) => [index('teams_captain_user_idx').on(t.captainUserId).where(isNull(t.deletedAt))],
 );
 
-export const teamPlayers = pgTable(
-  'team_players',
+export const teamMembers = pgTable(
+  'team_members',
   {
     id: id(),
     teamId: uuid('team_id')
       .notNull()
       .references(() => teams.id),
-    playerId: uuid('player_id')
+    userId: uuid('user_id')
       .notNull()
-      .references(() => players.id),
+      .references(() => users.id),
+    role: teamRole('role').notNull(),
     ...timestamps(),
   },
   (t) => [
-    uniqueIndex('team_players_team_player_key').on(t.teamId, t.playerId).where(isNull(t.deletedAt)),
-    index('team_players_player_idx').on(t.playerId).where(isNull(t.deletedAt)),
+    uniqueIndex('team_members_team_user_key').on(t.teamId, t.userId).where(isNull(t.deletedAt)),
+    index('team_members_user_idx').on(t.userId).where(isNull(t.deletedAt)),
+  ],
+);
+
+export const teamInvites = pgTable(
+  'team_invites',
+  {
+    id: id(),
+    teamId: uuid('team_id')
+      .notNull()
+      .references(() => teams.id),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id),
+    role: teamRole('role').notNull(),
+    status: inviteStatus('status').notNull(),
+    invitedBy: uuid('invited_by')
+      .notNull()
+      .references(() => users.id),
+    expiresAt: timestamptz('expires_at').notNull(),
+    respondedAt: timestamptz('responded_at'),
+    ...timestamps(),
+  },
+  (t) => [
+    uniqueIndex('team_invites_open_key')
+      .on(t.teamId, t.userId)
+      .where(and(eq(t.status, sql`'pending'`), isNull(t.deletedAt))!),
+    index('team_invites_user_idx').on(t.userId, t.status).where(isNull(t.deletedAt)),
   ],
 );
