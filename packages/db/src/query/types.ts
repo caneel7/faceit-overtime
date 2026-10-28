@@ -38,7 +38,6 @@ export type Row<T extends PgTable> = T['$inferSelect'];
 export type Col<T extends PgTable> = keyof Row<T> & string;
 type TableName<T extends PgTable> = T['_']['name'];
 type Value<T extends PgTable, K extends Col<T>> = NonNullable<Row<T>[K]>;
-type Element<V> = V extends readonly (infer E)[] ? E : never;
 
 type SystemColumn = 'id' | 'createdAt' | 'updatedAt' | 'deletedAt';
 export type NewRow<T extends PgTable, ScopeCol extends string = never> = Omit<
@@ -91,7 +90,7 @@ type Clause<T extends PgTable, R = object> = {
 } & {
   [K in Col<T> as `${K} ${'ISNULL' | 'NOTNULL' | 'EMPTY'}`]?: true;
 } & {
-  [K in Col<T> as `${K} HAS`]?: Element<Value<T, K>>;
+  [K in Col<T> as `${K} HAS`]?: string;
 } & {
   [K in keyof R as string extends K ? never : K]?: R[K] extends Relation<PgTable, infer Target>
     ? Clause<Target>

@@ -112,6 +112,15 @@ export class QueryBuilder<
       throw new QueryBuilderError(`${this.#tableName} is read-only in this scope`);
   }
 
+  #shouldLock(lock: 'update' | undefined, mode: 'rows' | 'page' | 'count'): boolean {
+    if (!lock) return false;
+    if (mode !== 'rows')
+      throw new QueryBuilderError('lock only works with find, findOne and getById');
+    if (this.scope.readOnly)
+      throw new QueryBuilderError(`${this.#tableName} can't be locked in a read-only scope`);
+    return true;
+  }
+
   #notDeleted(table: PgTable): SQL | undefined {
     const deletedAt = column(table, 'deletedAt');
     return deletedAt ? isNull(deletedAt) : undefined;
@@ -193,7 +202,7 @@ export class QueryBuilder<
       if (opts.limit !== undefined) query = query.limit(opts.limit);
       if (opts.offset !== undefined) query = query.offset(opts.offset);
     }
-    if (opts.lock && mode === 'rows') query = query.for('update', { of: table });
+    if (this.#shouldLock(opts.lock, mode)) query = query.for('update', { of: table });
     return query;
   }
 
@@ -217,7 +226,8 @@ export class QueryBuilder<
       .from(table)
       .where(this.#guard(eq(idColumn(this.table), id)))
       .limit(1);
-    const [row] = await (opts.lock ? query.for('update', { of: table }) : query);
+    const lock = this.#shouldLock(opts.lock, 'rows');
+    const [row] = await (lock ? query.for('update', { of: table }) : query);
     if (!row) throw new NotFoundError();
     return row as Row<T>;
   }
