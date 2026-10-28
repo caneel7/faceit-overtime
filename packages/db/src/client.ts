@@ -7,7 +7,6 @@ import { QueryBuilderError } from './query/errors';
 import type { AnyTable, GlobalTable, Relations, UserTable } from './query/types';
 import {
   players,
-  teamPlayers,
   teams,
   trustedDevices,
   userIdentities,
@@ -17,7 +16,7 @@ import {
   userTwoFactors,
 } from './schema';
 
-const GLOBAL_TABLES: ReadonlySet<PgTable> = new Set([players, users, teams, teamPlayers]);
+const GLOBAL_TABLES: ReadonlySet<PgTable> = new Set([players, users, teams]);
 const USER_TABLES: ReadonlySet<PgTable> = new Set([
   userSessions,
   userTwoFactors,

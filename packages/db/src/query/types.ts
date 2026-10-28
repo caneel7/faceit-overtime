@@ -2,7 +2,6 @@ import type { Column, SQL } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import type {
   players,
-  teamPlayers,
   teams,
   trustedDevices,
   userIdentities,
@@ -12,7 +11,7 @@ import type {
   userTwoFactors,
 } from '../schema';
 
-export type GlobalTable = typeof players | typeof users | typeof teams | typeof teamPlayers;
+export type GlobalTable = typeof players | typeof users | typeof teams;
 export type UserTable =
   | typeof userSessions
   | typeof userTwoFactors
