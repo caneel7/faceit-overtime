@@ -18,6 +18,8 @@ const HOUR = 60 * 60 * 1000;
 const TOKEN_LIFETIME: Record<UserTokenPurpose, number> = {
   email_verification: 24 * HOUR,
   password_reset: 30 * 60 * 1000,
+  account_activation: 7 * 24 * HOUR,
+  email_add: 24 * HOUR,
 };
 
 type Client = { userAgent: string | null; ip: string | null };
