@@ -1,4 +1,11 @@
-export { createDbClient, type DbClient, type DbClientOptions, type Scope } from './client';
+export {
+  createDbClient,
+  type DbClient,
+  type DbClientOptions,
+  type ReadQueryBuilder,
+  type ReadScope,
+  type Scope,
+} from './client';
 export { QueryBuilder } from './query/builder';
 export { ConflictError, NotFoundError, QueryBuilderError } from './query/errors';
 export type {
@@ -7,9 +14,11 @@ export type {
   GlobalTable,
   JoinSpec,
   NewRow,
+  OrgTable,
   OrderBy,
   Page,
   Patch,
+  PublishedTable,
   Relation,
   Relations,
   Result,

@@ -1,13 +1,25 @@
-import { sql } from 'drizzle-orm';
+import { ne, sql } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { QueryBuilder, type Executor, type ScopeConfig } from './query/builder';
 import { QueryBuilderError } from './query/errors';
-import type { AnyTable, GlobalTable, Relations, UserTable } from './query/types';
+import type {
+  AnyTable,
+  GlobalTable,
+  OrgTable,
+  PublishedTable,
+  Relations,
+  UserTable,
+} from './query/types';
 import {
+  orgs,
+  orgUsers,
   players,
+  teamInvites,
+  teamMembers,
   teams,
+  tournaments,
   trustedDevices,
   userIdentities,
   users,
@@ -16,27 +28,57 @@ import {
   userTwoFactors,
 } from './schema';
 
-const GLOBAL_TABLES: ReadonlySet<PgTable> = new Set([players, users, teams]);
+const GLOBAL_TABLES: ReadonlySet<PgTable> = new Set([
+  players,
+  users,
+  teams,
+  orgs,
+  teamMembers,
+  teamInvites,
+]);
 const USER_TABLES: ReadonlySet<PgTable> = new Set([
   userSessions,
   userTwoFactors,
   trustedDevices,
   userIdentities,
   userTokens,
+  orgUsers,
 ]);
-const ALL_TABLES: ReadonlySet<PgTable> = new Set([...GLOBAL_TABLES, ...USER_TABLES]);
+const ORG_TABLES: ReadonlySet<PgTable> = new Set([tournaments, orgUsers]);
+const PUBLISHED_TABLES: ReadonlySet<PgTable> = new Set([orgs, tournaments]);
+const USER_SCOPE_TABLES: ReadonlySet<PgTable> = new Set([...GLOBAL_TABLES, ...USER_TABLES]);
+const ORG_SCOPE_TABLES: ReadonlySet<PgTable> = new Set([...GLOBAL_TABLES, ...ORG_TABLES]);
+const ALL_TABLES: ReadonlySet<PgTable> = new Set([...GLOBAL_TABLES, ...USER_TABLES, ...ORG_TABLES]);
+const PUBLISHED_FILTERS: ScopeConfig['filters'] = new Map([
+  [tournaments as PgTable, () => ne(tournaments.status, 'draft')],
+]);
 
-export interface Scope<TT extends PgTable, ScopeCol extends string = never> {
+export interface Scope<TT extends PgTable, ScopeCol extends string = never, Owned = never> {
   for<T extends TT, R extends Relations<T, TT> = Record<never, never>>(
     table: T,
     relations?: R,
-  ): QueryBuilder<T, R, ScopeCol>;
+  ): QueryBuilder<T, R, T extends Owned ? ScopeCol : never>;
+}
+
+export type ReadQueryBuilder<T extends PgTable, R extends Relations<T>> = Pick<
+  QueryBuilder<T, R>,
+  'find' | 'findOne' | 'getById' | 'count' | 'paginate' | 'toSQL'
+>;
+
+export interface ReadScope<TT extends PgTable> {
+  for<T extends TT, R extends Relations<T, TT> = Record<never, never>>(
+    table: T,
+    relations?: R,
+  ): ReadQueryBuilder<T, R>;
 }
 
 export interface DbClient {
   readonly global: Scope<GlobalTable>;
+  readonly published: ReadScope<PublishedTable>;
   readonly system: Scope<AnyTable>;
-  forUser(userId: string): Scope<UserTable | GlobalTable, 'userId'>;
+  forUser(userId: string): Scope<UserTable | GlobalTable, 'userId', UserTable>;
+  forOrg(orgId: string): Scope<OrgTable | GlobalTable, 'orgId', OrgTable>;
+  forOrgs(orgIds: readonly string[]): ReadScope<OrgTable | GlobalTable>;
   transaction<R>(fn: (tx: DbClient) => Promise<R>): Promise<R>;
   ping(): Promise<void>;
   close(): Promise<void>;
@@ -50,12 +92,22 @@ export type DbClientOptions = {
 
 export const executors = new WeakMap<DbClient, Executor>();
 
-function scope<TT extends PgTable, ScopeCol extends string = never>(
+function scope<TT extends PgTable, ScopeCol extends string = never, Owned = never>(
   db: Executor,
   config: ScopeConfig,
-): Scope<TT, ScopeCol> {
+): Scope<TT, ScopeCol, Owned> {
   return {
     for: (table, relations) => new QueryBuilder(db, config, table, relations),
+  };
+}
+
+function readScope<TT extends PgTable>(
+  db: Executor,
+  config: Omit<ScopeConfig, 'readOnly'>,
+): ReadScope<TT> {
+  return {
+    for: (table, relations) =>
+      new QueryBuilder(db, { ...config, readOnly: true }, table, relations),
   };
 }
 
@@ -76,12 +128,26 @@ export function makeClient(
 ): DbClient {
   const client: DbClient = {
     global: scope(db, { tables: GLOBAL_TABLES }),
+    published: readScope(db, { tables: PUBLISHED_TABLES, filters: PUBLISHED_FILTERS }),
     system: scope(db, { tables: ALL_TABLES }),
     forUser(userId) {
       if (!userId) throw new QueryBuilderError('forUser needs a user id');
       return scope(db, {
-        tables: ALL_TABLES,
+        tables: USER_SCOPE_TABLES,
         owner: { column: 'userId', value: userId, tables: USER_TABLES },
+      });
+    },
+    forOrg(orgId) {
+      if (!orgId) throw new QueryBuilderError('forOrg needs an org id');
+      return scope(db, {
+        tables: ORG_SCOPE_TABLES,
+        owner: { column: 'orgId', value: orgId, tables: ORG_TABLES },
+      });
+    },
+    forOrgs(orgIds) {
+      return readScope(db, {
+        tables: ORG_SCOPE_TABLES,
+        owner: { column: 'orgId', value: orgIds, tables: ORG_TABLES },
       });
     },
     transaction(fn) {
