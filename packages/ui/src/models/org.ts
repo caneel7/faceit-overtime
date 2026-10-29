@@ -1,6 +1,6 @@
-export type OrgRole = 'owner' | 'admin';
+import type { OrgRole, OrgSummary } from '@overtime/shared';
 
-export type OrgSummary = { id: string; slug: string; name: string };
+export type { OrgRole, OrgSummary } from '@overtime/shared';
 
 export type OrgAdmin = {
   userId: string;

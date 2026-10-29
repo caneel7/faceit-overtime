@@ -12,6 +12,13 @@ export const ErrorCode = z.enum([
   'INVALID_TOKEN',
   'RATE_LIMITED',
   'EMAIL_TAKEN',
+  'FORBIDDEN',
+  'ALREADY_MEMBER',
+  'ALREADY_INVITED',
+  'INVITE_CLOSED',
+  'TEAM_FULL',
+  'FACEIT_REQUIRED',
+  'CAPTAIN_CANNOT_LEAVE',
 ]);
 export type ErrorCode = z.infer<typeof ErrorCode>;
 

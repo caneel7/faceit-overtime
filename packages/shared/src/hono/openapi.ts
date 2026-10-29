@@ -23,6 +23,13 @@ const STATUS_BY_CODE: Record<ErrorCode, number> = {
   INVALID_TOKEN: 400,
   RATE_LIMITED: 429,
   EMAIL_TAKEN: 409,
+  FORBIDDEN: 403,
+  ALREADY_MEMBER: 409,
+  ALREADY_INVITED: 409,
+  INVITE_CLOSED: 409,
+  TEAM_FULL: 409,
+  FACEIT_REQUIRED: 409,
+  CAPTAIN_CANNOT_LEAVE: 409,
 };
 
 export function errorResponses(...codes: ErrorCode[]) {
